@@ -8,7 +8,7 @@ const MyProfile = () => {
     phone: "+1 123 456 7840",
     address: {
       line1: "57th Cross, Richmond",
-      line2: "Circle, Church Road,lONDON",
+      line2: "Circle, Church Road, London",
     },
     gender: "Male",
     dob: "1999-01-20",
@@ -121,12 +121,15 @@ const MyProfile = () => {
       </div>
       <div className="">
         {isEdit ? (
-          <button className="" onClick={() => setIsEdit(false)}>
+          <button
+            className="bg-[rgb(95,111,255)] mt-5 rounded-full text-white px-7 py-2 hover:translate-y-[-5px] transition-all duration-500"
+            onClick={() => setIsEdit(false)}
+          >
             Save Information
           </button>
         ) : (
           <button
-            className="bg-[rgb(95,111,255)] rounded-full text-white px-7 py-2 hover:translate-y-[-5px] transition-all duration-500"
+            className="bg-[rgb(95,111,255)] mt-5 rounded-full text-white px-7 py-2 hover:translate-y-[-5px] transition-all duration-500"
             onClick={() => setIsEdit(true)}
           >
             Edit

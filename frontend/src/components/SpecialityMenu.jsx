@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { specialityData } from "./../assets/assets_frontend/assets";
+
 const SpecialityMenu = () => {
   return (
     <div
@@ -16,11 +17,17 @@ const SpecialityMenu = () => {
         {specialityData.map((item, index) => (
           <Link
             onClick={() => scrollTo(0, 0)}
-            className="rounded-xl bg-[rgb(95,111,255)] px-12 py-4 items-center text-xs cursor-pointer flex-shrink-0  hover:translate-y-[-5px] transition-all duration-500"
+            className="
+              rounded-xl bg-[rgb(95,111,255)] 
+              w-48 py-4 flex justify-center items-center 
+              text-lg text-white cursor-pointer 
+              hover:translate-y-[-5px] hover:bg-[rgb(75,91,220)] 
+              transition-all duration-500
+            "
             to={`/doctors/${item.speciality}`}
             key={index}
           >
-            <p className="text-lg">{item.speciality}</p>
+            {item.speciality}
           </Link>
         ))}
       </div>
