@@ -2,12 +2,45 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-*{
-  font-family: "Alan Sans"
+
+body {
+  font-family: "Alan Sans", sans-serif;
 }
-.active hr{
-    @apply block
+
+.active hr {
+    @apply block;
 }
-::-webkit-scrollbar {
-  @apply hidden;
+
+/* Optional: hide scrollbar for other elements */
+.hidden-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Scrollable time slots with primary color */
+.time-slots-scroll {
+  display: flex;
+  gap: 0.75rem; /* spacing similar to Tailwind gap-3 */
+  overflow-x: auto;
+  padding-bottom: 0.25rem; /* optional padding for scrollbar */
+}
+
+/* Chrome, Safari, Edge */
+.time-slots-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.time-slots-scroll::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.1);
+  border-radius: 4px;
+}
+
+.time-slots-scroll::-webkit-scrollbar-thumb {
+  background: rgb(95,111,255);
+  border-radius: 4px;
+}
+
+/* Firefox */
+.time-slots-scroll {
+  scrollbar-width: thick;
+  scrollbar-color: rgb(95,111,255) rgba(0,0,0,0.1);
 }
