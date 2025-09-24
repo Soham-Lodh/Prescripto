@@ -65,4 +65,9 @@ npm run dev
 cd ../admin
 npm i
 npm run dev
+<<<<<<< HEAD
 ```
+=======
+```
+
+>>>>>>> 352aae81e516ee79a5d369f4037827de2f597274
