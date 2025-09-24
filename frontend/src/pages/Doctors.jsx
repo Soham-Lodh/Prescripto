@@ -7,9 +7,7 @@ const Doctors = () => {
   const { speciality } = useParams();
   const { doctors } = useContext(AppContext);
   const navigate = useNavigate();
-
   const [showFilter, setShowFilter] = useState(false); // Mobile filter toggle
-
   const doctorTypes = [
     "General Physician",
     "Gynecologist",
@@ -22,7 +20,6 @@ const Doctors = () => {
     "Cardiologist",
     "ENT Specialist",
   ];
-
   const applyFilter = (spec) => {
     if (spec) {
       setFilterDoc(doctors.filter((doc) => doc.speciality === spec));
@@ -32,71 +29,60 @@ const Doctors = () => {
       setFilterDoc(doctors);
     }
   };
-
   useEffect(() => {
     applyFilter();
   }, [doctors, speciality]);
-
   return (
     <div className="px-4 sm:px-0">
       <p className="text-gray-600">
         Browse through our list of specialized doctors
       </p>
-
-      {/* Mobile Filter Button */}
-{/* Mobile Filter Button */}
-<div className="sm:hidden flex justify-start mt-4 mb-4">
-  <button
-    onClick={() => setShowFilter(!showFilter)}
-    className="bg-[rgb(95,111,255)] text-white px-4 py-2 rounded-md font-medium flex items-center gap-2"
-  >
-    {showFilter ? (
-      "Close Filter"
-    ) : (
-      <>
-        Filter
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className="w-5 h-5"
+      <div className="sm:hidden flex justify-start mt-4 mb-4">
+        <button
+          onClick={() => setShowFilter(!showFilter)}
+          className="bg-[rgb(95,111,255)] text-white px-4 py-2 rounded-md font-medium flex items-center gap-2"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z"
-          />
-        </svg>
-      </>
-    )}
-  </button>
-</div>
-
-
-{/* Mobile Filter Menu */}
-{showFilter && (
-  <div className="sm:hidden flex flex-col gap-2 mb-4">
-    {doctorTypes.map((spec) => (
-      <button
-        key={spec}
-        onClick={() => {
-          applyFilter(spec);
-          setShowFilter(false);
-          navigate(`/doctors/${spec}`);
-        }}
-        className="text-left w-full px-4 py-2 border border-gray-300 rounded hover:bg-[rgb(95,111,255)] hover:text-white transition-all"
-      >
-        {spec}
-      </button>
-    ))}
-  </div>
-)}
-
-
+          {showFilter ? (
+            "Close Filter"
+          ) : (
+            <>
+              Filter
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-5 h-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z"
+                />
+              </svg>
+            </>
+          )}
+        </button>
+      </div>
+      {showFilter && (
+        <div className="sm:hidden flex flex-col gap-2 mb-4">
+          {doctorTypes.map((spec) => (
+            <button
+              key={spec}
+              onClick={() => {
+                applyFilter(spec);
+                setShowFilter(false);
+                navigate(`/doctors/${spec}`);
+              }}
+              className="text-left w-full px-4 py-2 border border-gray-300 rounded hover:bg-[rgb(95,111,255)] hover:text-white transition-all"
+            >
+              {spec}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="flex flex-col gap-5 sm:flex-row items-start">
-        {/* Sidebar for Desktop */}
         <div className="hidden sm:flex flex-col gap-4 text-sm text-gray-600">
           {doctorTypes.map((spec) => (
             <p
@@ -108,8 +94,6 @@ const Doctors = () => {
             </p>
           ))}
         </div>
-
-        {/* Doctors Grid */}
         <div className="w-full grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 gap-y-6">
           {filterDoc.map((item, index) => (
             <div

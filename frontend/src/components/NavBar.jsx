@@ -83,56 +83,53 @@ const NavBar = () => {
 
         {/* Mobile Menu */}
         {/* Mobile Menu */}
-{showMenu && (
-  <div className="fixed top-0 right-0 w-full h-full bg-gray-100 z-30 flex flex-col p-6">
-    <div className="flex justify-between items-center mb-6">
-      <img
-        src={assets.logo}
-        alt="Logo"
-        className="w-36 cursor-pointer"
-        onClick={() => {
-          navigate("/");
-          scrollTo(0, 0);
-          setShowMenu(false);
-        }}
-      />
-      <img
-        onClick={() => setShowMenu(false)}
-        src={assets.cross_icon}
-        alt="Close"
-        className="w-6 cursor-pointer"
-      />
-    </div>
-    <ul className="flex flex-col gap-6 text-lg font-medium">
-      <NavLink onClick={() => setShowMenu(false)} to="/">
-        Home
-      </NavLink>
-      <NavLink onClick={() => setShowMenu(false)} to="/doctors">
-        All Doctors
-      </NavLink>
-      <NavLink onClick={() => setShowMenu(false)} to="/about">
-        About
-      </NavLink>
-      <NavLink onClick={() => setShowMenu(false)} to="/contact">
-        Contact
-      </NavLink>
-    </ul>
-
-    {/* Create Account Button for Mobile if not logged in */}
-    {!token && (
-      <button
-        onClick={() => {
-          navigate("/login");
-          setShowMenu(false);
-        }}
-        className="bg-[rgb(95,111,255)] text-white px-6 py-3 mt-6 rounded-full font-light hover:translate-y-[-2px] hover:shadow-lg transition-all duration-300"
-      >
-        Create Account
-      </button>
-    )}
-  </div>
-)}
-
+        {showMenu && (
+          <div className="fixed top-0 right-0 w-full h-full bg-gray-100 z-30 flex flex-col p-6">
+            <div className="flex justify-between items-center mb-6">
+              <img
+                src={assets.logo}
+                alt="Logo"
+                className="w-36 cursor-pointer"
+                onClick={() => {
+                  navigate("/");
+                  scrollTo(0, 0);
+                  setShowMenu(false);
+                }}
+              />
+              <img
+                onClick={() => setShowMenu(false)}
+                src={assets.cross_icon}
+                alt="Close"
+                className="w-6 cursor-pointer"
+              />
+            </div>
+            <ul className="flex flex-col gap-6 text-lg font-medium">
+              <NavLink onClick={() => setShowMenu(false)} to="/">
+                Home
+              </NavLink>
+              <NavLink onClick={() => setShowMenu(false)} to="/doctors">
+                All Doctors
+              </NavLink>
+              <NavLink onClick={() => setShowMenu(false)} to="/about">
+                About
+              </NavLink>
+              <NavLink onClick={() => setShowMenu(false)} to="/contact">
+                Contact
+              </NavLink>
+            </ul>
+            {!token && (
+              <button
+                onClick={() => {
+                  navigate("/login");
+                  setShowMenu(false);
+                }}
+                className="bg-[rgb(95,111,255)] text-white px-6 py-3 mt-6 rounded-full font-light hover:translate-y-[-2px] hover:shadow-lg transition-all duration-300"
+              >
+                Create Account
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
