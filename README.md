@@ -1,87 +1,69 @@
-# Welcome to React Router!
+# Prescripto – Online Doctor Appointment & Booking System
+ 
 
-A modern, production-ready template for building full-stack React applications using React Router.
-
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
-
-## Features
-
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
-
-## Getting Started
-
-### Installation
-
-Install the dependencies:
-
-```bash
-npm install
-```
-
-### Development
-
-Start the development server with HMR:
-
-```bash
-npm run dev
-```
-
-Your application will be available at `http://localhost:5173`.
-
-## Building for Production
-
-Create a production build:
-
-```bash
-npm run build
-```
-
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
-
-```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
-```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+Prescripto is a **MERN (MongoDB, Express, React, Node.js) web application** for booking appointments with specialized doctors online. It includes a **user panel**, **doctor panel**, and **admin panel**, along with **online payment integration**.
 
 ---
 
-Built with ❤️ using React Router.
+## Features
+
+### User Panel
+- Browse and search specialized doctors
+- View doctor profiles including experience, degree, fees, and availability
+- Book appointments with preferred date/time
+- Make secure online payments
+- View booking history and upcoming appointments
+
+### Doctor Panel
+- View appointment schedule
+- Manage availability and slots
+- Access patient details for appointments
+
+### Admin Panel
+- Manage doctors and users
+- Approve or reject doctor registrations
+- Monitor system activity and reports
+
+---
+
+## Technology Stack
+
+- **Frontend:** React.js, Tailwind CSS
+- **Backend:** Node.js, Express.js
+- **Database:** MongoDB
+- **Authentication:** JWT (JSON Web Tokens)
+- **File Storage:** Cloudinary
+- **Payments:** Razorpay
+- **Other:** Multer for file uploads, bcrypt for password hashing
+
+---
+
+## Installation
+
+1. **Clone the repository**
+
+```bash
+git clone https://github.com/Soham-Lodh/Prescripto
+cd prescripto
+```
+2. **Start backend server**
+```bash
+cd backend
+npm i
+nodemon server.js
+```
+
+3. **Start user frontend**
+```bash
+cd ../frontend
+npm i
+npm run dev
+```
+
+4. **Start admin frontend**
+```bash
+cd ../admin
+npm i
+npm run dev
+```
+
