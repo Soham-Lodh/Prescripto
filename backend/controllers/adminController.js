@@ -121,8 +121,8 @@ export const loginAdmin = async (req, res) => {
       });
     }
     if (
-      email === process.env.ADMIN_EMAIL &&
-      password === process.env.ADMIN_PASSWORD
+      email === process.env.ADMIN_EMAIL?.trim() &&
+      password === process.env.ADMIN_PASSWORD?.trim()
     ) {
       const token = jwt.sign(email + password, process.env.JWT_SECRET);
       res.json({
