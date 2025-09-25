@@ -5,9 +5,9 @@ const About = () => {
   return (
     <div className="mt-10 px-6 md:px-16 lg:px-24">
       <div className="w-full mb-8 text-center">
-        <p className="text-3xl text-gray-600">
-          ABOUT <span className="text-gray-900">US</span>
-        </p>
+        <p className="text-center text-3xl font-bold text-gray-600 mb-12">
+        ABOUT <span className="text-[rgb(95,111,255)]">US</span>
+      </p>
       </div>
       <div className="w-full flex flex-col lg:flex-row gap-10 items-center">
         <div className="w-full lg:w-1/2">

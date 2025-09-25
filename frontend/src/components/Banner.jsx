@@ -12,12 +12,12 @@ const Banner = () => {
         </div>
         <button
           onClick={() => {
-            navigate("/login");
+            navigate("/doctors");
             scrollTo(0, 0);
           }}
           className="bg-white mt-4 text-sm sm:text-base text-gray-600 px-8 py-3 rounded-full hover:scale-105 transition-all "
         >
-          Create Account
+          Book an Appointment
         </button>
       </div>
       <div className="hidden md:block md:w-1/2 lg:w-[370px] relative">

@@ -34,7 +34,7 @@ const Doctors = () => {
   }, [doctors, speciality]);
   return (
     <div className="px-4 sm:px-0">
-      <p className="text-gray-600">
+      <p className="text-gray-600 text-center text-lg">
         Browse through our list of specialized doctors
       </p>
       <div className="sm:hidden flex justify-start mt-4 mb-4">
