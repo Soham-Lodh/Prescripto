@@ -31,10 +31,10 @@ Prescripto is a **MERN (MongoDB, Express, React, Node.js) web application** for 
 - **Frontend:** React.js, Tailwind CSS
 - **Backend:** Node.js, Express.js
 - **Database:** MongoDB
-- **Authentication:** JWT (JSON Web Tokens)
+- **Authentication:** JWT
 - **File Storage:** Cloudinary
 - **Payments:** Razorpay
-- **Other:** Multer for file uploads, bcrypt for password hashing
+- **Other:** Multer, Bcrypt
 
 ---
 
