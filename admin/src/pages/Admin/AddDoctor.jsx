@@ -1,11 +1,11 @@
 import React from 'react';
 
-const SideBar = () => {
+const AddDoctor = () => {
   return (
     <div>
-      Sidebar
+      
     </div>
   );
 };
 
-export default SideBar;
+export default AddDoctor;
