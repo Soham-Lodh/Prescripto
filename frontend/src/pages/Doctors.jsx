@@ -4,10 +4,12 @@ import { AppContext } from "../context/AppContext";
 
 const Doctors = () => {
   const [filterDoc, setFilterDoc] = useState([]);
+  const [activeSpec, setActiveSpec] = useState(null);
   const { speciality } = useParams();
   const { doctors } = useContext(AppContext);
   const navigate = useNavigate();
   const [showFilter, setShowFilter] = useState(false); // Mobile filter toggle
+
   const doctorTypes = [
     "General Physician",
     "Gynecologist",
@@ -20,6 +22,8 @@ const Doctors = () => {
     "Cardiologist",
     "ENT Specialist",
   ];
+
+  // Filter doctors by speciality
   const applyFilter = (spec) => {
     if (spec) {
       setFilterDoc(doctors.filter((doc) => doc.speciality === spec));
@@ -29,14 +33,28 @@ const Doctors = () => {
       setFilterDoc(doctors);
     }
   };
+
+  // Sync filter with doctors & speciality param
   useEffect(() => {
     applyFilter();
   }, [doctors, speciality]);
+
+  // Keep activeSpec synced with current URL
+  useEffect(() => {
+    if (speciality) {
+      setActiveSpec(speciality);
+    } else {
+      setActiveSpec(null);
+    }
+  }, [speciality]);
+
   return (
     <div className="px-4 sm:px-0">
       <p className="text-gray-600 text-center text-lg">
         Browse through our list of specialized doctors
       </p>
+
+      {/* Mobile Filter Toggle */}
       <div className="sm:hidden flex justify-start mt-4 mb-4">
         <button
           onClick={() => setShowFilter(!showFilter)}
@@ -65,6 +83,8 @@ const Doctors = () => {
           )}
         </button>
       </div>
+
+      {/* Mobile Filter List */}
       {showFilter && (
         <div className="sm:hidden flex flex-col gap-2 mb-4">
           {doctorTypes.map((spec) => (
@@ -72,28 +92,42 @@ const Doctors = () => {
               key={spec}
               onClick={() => {
                 applyFilter(spec);
-                setShowFilter(false);
                 navigate(`/doctors/${spec}`);
+                setShowFilter(false);
               }}
-              className="text-left w-full px-4 py-2 border border-gray-300 rounded hover:bg-[rgb(95,111,255)] hover:text-white transition-all"
+              className={`text-left w-full px-4 py-2 border border-gray-300 rounded transition-all
+                ${
+                  activeSpec === spec
+                    ? "bg-[rgb(95,111,255)] text-white"
+                    : "bg-white text-black hover:bg-[rgb(95,111,255)] hover:text-white"
+                }`}
             >
               {spec}
             </button>
           ))}
         </div>
       )}
+
       <div className="flex flex-col gap-5 sm:flex-row items-start">
+        {/* Desktop Sidebar Filter */}
         <div className="hidden sm:flex flex-col gap-4 text-sm text-gray-600">
           {doctorTypes.map((spec) => (
             <p
               key={spec}
               onClick={() => navigate(`/doctors/${spec}`)}
-              className="w-auto pl-3 py-1.5 pr-16 border border-gray-300 rounded transition-all cursor-pointer"
+              className={`w-auto pl-3 py-1.5 pr-16 border border-gray-300 rounded transition-all cursor-pointer
+                ${
+                  activeSpec === spec
+                    ? "bg-[rgb(95,111,255)] text-white"
+                    : "hover:bg-[rgb(95,111,255)] hover:text-white"
+                }`}
             >
               {spec}
             </p>
           ))}
         </div>
+
+        {/* Doctors Grid */}
         <div className="w-full grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 gap-y-6">
           {filterDoc.map((item, index) => (
             <div
