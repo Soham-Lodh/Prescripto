@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import { v2 as cloudinary } from "cloudinary";
 import doctorModel from "../models/doctorModel.js";
 import jwt from "jsonwebtoken";
+
 export const addDoctor = async (req, res) => {
   try {
     const {
@@ -17,6 +18,7 @@ export const addDoctor = async (req, res) => {
       address,
     } = req.body;
     const imageFile = req.file;
+
     if (
       !name ||
       !email ||
@@ -34,25 +36,33 @@ export const addDoctor = async (req, res) => {
         message: "All fields including image are required",
       });
     }
+
     if (!validator.isEmail(email)) {
-      return res.json({
-        success: false,
-        message: "Enter a valid email",
-      });
+      return res.json({ success: false, message: "Enter a valid email" });
     }
+
     const passwordCheck = checkPasswordStrength(password, name, email);
     if (!passwordCheck.valid) {
-      return res.json({
-        success: false,
-        message: passwordCheck.message,
-      });
+      return res.json({ success: false, message: passwordCheck.message });
     }
+
     const salt = await bcrypt.genSalt(15);
     const hashedPassword = await bcrypt.hash(password, salt);
-    const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
-      resource_type: "image",
+
+    // Upload from buffer to Cloudinary
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { resource_type: "image" },
+        (err, res) => {
+          if (err) reject(err);
+          else resolve(res);
+        }
+      );
+      stream.end(imageFile.buffer);
     });
-    const imageUrl = imageUpload.secure_url;
+
+    const imageUrl = result.secure_url;
+
     const doctorData = {
       name,
       email,
@@ -66,12 +76,11 @@ export const addDoctor = async (req, res) => {
       address: JSON.parse(address),
       date: Date.now(),
     };
+
     const newDoctor = new doctorModel(doctorData);
     await newDoctor.save();
-    res.json({
-      success: true,
-      message: "Doctor added",
-    });
+
+    res.json({ success: true, message: "Doctor added" });
   } catch (err) {
     console.error("Error adding doctor:", err);
     res.json({
@@ -81,20 +90,20 @@ export const addDoctor = async (req, res) => {
     });
   }
 };
+
 function checkPasswordStrength(password, name, email) {
   const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
-  if (!password || password.length < 8) {
+  if (!password || password.length < 8)
     return {
       valid: false,
       message: "Password must be at least 8 characters long.",
     };
-  }
-  if (!specialCharRegex.test(password)) {
+  if (!specialCharRegex.test(password))
     return {
       valid: false,
       message: "Password must contain at least one special character.",
     };
-  }
+
   const nameParts = name ? name.toLowerCase().split(" ") : [];
   const emailParts = email ? email.toLowerCase().split(/[@._]/) : [];
   const passwordLower = password.toLowerCase();
@@ -114,32 +123,37 @@ function checkPasswordStrength(password, name, email) {
 export const loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
-      res.json({
-        success: false,
-        message: "Fill all details",
-      });
-    }
+    if (!email || !password)
+      return res.json({ success: false, message: "Fill all details" });
+
     if (
       email === process.env.ADMIN_EMAIL?.trim() &&
       password === process.env.ADMIN_PASSWORD?.trim()
     ) {
       const token = jwt.sign(email + password, process.env.JWT_SECRET);
-      res.json({
-        success: true,
-        token,
-      });
-    } else {
-      res.json({
-        success: false,
-        message: "Invalid credentials",
-      });
+      return res.json({ success: true, token });
     }
+
+    return res.json({ success: false, message: "Invalid credentials" });
   } catch (err) {
-    console.error("Error adding doctor:", err);
-    res.json({
+    console.error(err);
+    return res.json({
       success: false,
-      message: "Server error while adding doctor",
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+export const allDoctors = async (req, res) => {
+  try {
+    const doctors = await doctorModel.find({}).select("-password");
+    return res.json({ success: true, doctors });
+  } catch (err) {
+    console.error(err);
+    return res.json({
+      success: false,
+      message: "Server error",
       error: err.message,
     });
   }
