@@ -7,7 +7,7 @@ const AppContextProvider = ({ children }) => {
   const currency = "$";
   const backendURL = import.meta.env.VITE_BACKEND_URL;
   const [doctors, setDoctors] = useState([]);
-  const [token, setToken] = useState();
+  const [token, setToken] = useState(localStorage.getItem("token") || false);
   const getDoctorsData=async()=>{
     try{
       console.log("Fetching doctors from:", `${backendURL}/api/doctor/list`);

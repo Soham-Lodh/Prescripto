@@ -8,13 +8,14 @@ const Login = () => {
   const [state, setState] = useState("Sign Up");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
 
   const { backendURL, setToken } = useContext(AppContext);
-
+  if (localStorage.getItem("token")) {
+    navigate("/");
+  }
   const onSubmitHandler = async (event) => {
     event.preventDefault();
     setLoading(true);
