@@ -49,7 +49,6 @@ export const addDoctor = async (req, res) => {
     const salt = await bcrypt.genSalt(15);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Upload from buffer to Cloudinary
     const result = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         { resource_type: "image" },

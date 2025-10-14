@@ -10,7 +10,8 @@ import MyProfile from "./pages/MyProfile";
 import Appointments from "./pages/Appointments";
 import NavBar from "./components/NavBar";
 import Footer from "./components/Footer";
-
+import { ToastContainer, toast} from 'react-toastify' ;
+import 'react-toastify/dist/ReactToastify.css';
 const App = () => {
   return (
     <div className="mx-4 bg-gray-100 sm:mx-[10%]">
