@@ -1,11 +1,31 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import { assets } from "./../assets/assets_frontend/assets";
 import { NavLink, useNavigate } from "react-router-dom";
+import { AppContext } from "../context/AppContext";
 
 const NavBar = () => {
   const navigate = useNavigate();
-  const [token, setToken] = useState(true);
+  const { token, setToken } = useContext(AppContext);
   const [showMenu, setShowMenu] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const logout = () => {
+    setToken(false);
+    localStorage.removeItem("token");
+    setShowDropdown(false);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <div className="flex items-center justify-between text-sm py-4 px-6 mb-5 border-b border-gray-400 relative">
@@ -36,33 +56,41 @@ const NavBar = () => {
       {/* Right Section */}
       <div className="flex items-center gap-4">
         {token ? (
-          <div className="flex items-center gap-2.5 cursor-pointer relative group">
-            <img
-              src={assets.profile_pic}
-              alt="User"
-              className="w-8 rounded-full"
-            />
+          <div
+            className="flex items-center gap-2.5 cursor-pointer relative"
+            ref={dropdownRef}
+            onMouseEnter={() => setShowDropdown(true)}
+            onMouseLeave={() => setShowDropdown(false)}
+            onClick={() => setShowDropdown((prev) => !prev)}
+          >
+            <img src={assets.profile_pic} alt="User" className="w-8 rounded-full" />
             <img src={assets.dropdown_icon} alt="" className="w-4" />
-            <div className="absolute top-12 right-0 min-w-[170px] bg-stone-100 rounded-xl flex flex-col gap-2 p-3 font-medium text-gray-600 shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <p
-                onClick={() => navigate("/my-profile")}
-                className="hover:text-black cursor-pointer border-b border-gray-400 pb-1"
-              >
-                My Profile
-              </p>
-              <p
-                onClick={() => navigate("/my-appointments")}
-                className="hover:text-black cursor-pointer border-b border-gray-400 pb-1 pt-1"
-              >
-                My Appointments
-              </p>
-              <p
-                onClick={() => setToken(false)}
-                className="hover:text-black cursor-pointer pt-1"
-              >
-                Logout
-              </p>
-            </div>
+
+            {showDropdown && (
+              <div className="absolute top-8 right-0 min-w-[170px] bg-stone-100 rounded-xl flex flex-col gap-2 p-3 font-medium text-gray-600 shadow-md z-20">
+                <p
+                  onClick={() => {
+                    navigate("/my-profile");
+                    setShowDropdown(false);
+                  }}
+                  className="hover:text-black cursor-pointer border-b border-gray-400 pb-1"
+                >
+                  My Profile
+                </p>
+                <p
+                  onClick={() => {
+                    navigate("/my-appointments");
+                    setShowDropdown(false);
+                  }}
+                  className="hover:text-black cursor-pointer border-b border-gray-400 pb-1 pt-1"
+                >
+                  My Appointments
+                </p>
+                <p onClick={logout} className="hover:text-black cursor-pointer pt-1">
+                  Logout
+                </p>
+              </div>
+            )}
           </div>
         ) : (
           <button
@@ -81,7 +109,6 @@ const NavBar = () => {
           className="w-6 md:hidden cursor-pointer"
         />
 
-        {/* Mobile Menu */}
         {/* Mobile Menu */}
         {showMenu && (
           <div className="fixed top-0 right-0 w-full h-full bg-gray-100 z-30 flex flex-col p-6">
@@ -104,18 +131,10 @@ const NavBar = () => {
               />
             </div>
             <ul className="flex flex-col gap-6 text-lg font-medium">
-              <NavLink onClick={() => setShowMenu(false)} to="/">
-                Home
-              </NavLink>
-              <NavLink onClick={() => setShowMenu(false)} to="/doctors">
-                All Doctors
-              </NavLink>
-              <NavLink onClick={() => setShowMenu(false)} to="/about">
-                About
-              </NavLink>
-              <NavLink onClick={() => setShowMenu(false)} to="/contact">
-                Contact
-              </NavLink>
+              <NavLink onClick={() => setShowMenu(false)} to="/">Home</NavLink>
+              <NavLink onClick={() => setShowMenu(false)} to="/doctors">All Doctors</NavLink>
+              <NavLink onClick={() => setShowMenu(false)} to="/about">About</NavLink>
+              <NavLink onClick={() => setShowMenu(false)} to="/contact">Contact</NavLink>
             </ul>
             {!token && (
               <button

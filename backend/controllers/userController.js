@@ -47,3 +47,29 @@ export const registerUser = async (req, res) => {
     res.send({ success: false, message: error.message });
   }
 };
+export const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.send({
+        success: false,
+        message: "Please fill all the fields",
+      });
+    }
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.send({ success: false, message: "User does not exist" });
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.send({ success: false, message: "Invalid credentials" });
+    }
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+    res.send({ success: true, message: "User logged in successfully", token });
+  } catch (error) {
+    console.log(error);
+    res.send({ success: false, message: error.message });
+  }
+};
