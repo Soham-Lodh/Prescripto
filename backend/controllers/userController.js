@@ -43,6 +43,7 @@ const registerUser = async (req, res) => {
     });
     res.send({ success: true, message: "User registered successfully", token });
   } catch (error) {
+    console.log(error);
     res.send({ success: false, message: error.message });
   }
 };
