@@ -55,7 +55,7 @@ const AppContextProvider = ({ children }) => {
     }
   }, [token]);
   const value = {
-    doctors,
+    doctors, getDoctorsData,
     currency,
     token, setToken,
     backendURL,

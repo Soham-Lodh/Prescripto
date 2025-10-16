@@ -1,6 +1,8 @@
 import validator from "validator";
 import bcrypt from "bcrypt";
 import userModel from "../models/userModel.js";
+import doctorModel from "../models/doctorModel.js";
+import appointmentModel from "../models/appointmentModel.js";
 import jwt from "jsonwebtoken";
 import { v2 as cloudinary } from "cloudinary";
 export const registerUser = async (req, res) => {
@@ -208,3 +210,85 @@ export const updateProfile = async (req, res) => {
     });
   }
 };
+export const bookAppointment = async (req, res) => {
+  try {
+    const { docId, slotDate, slotTime } = req.body;
+    const userId = req.user.userId;
+
+    // Validate input
+    if (!docId || !slotDate || !slotTime) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields: docId, slotDate, or slotTime",
+      });
+    }
+
+    const docData = await doctorModel.findById(docId).select("-password");
+    if (!docData) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found",
+      });
+    }
+
+    if (!docData.available) {
+      return res.status(400).json({
+        success: false,
+        message: "Doctor is not available for appointments",
+      });
+    }
+
+    // Ensure slots_booked exists
+    if (!docData.slots_booked) docData.slots_booked = {};
+
+    // Check if slot already booked
+    if (docData.slots_booked[slotDate]?.includes(slotTime)) {
+      return res.status(400).json({
+        success: false,
+        message: "Slot already booked. Please choose another slot.",
+      });
+    }
+
+    // Book the slot
+    if (!docData.slots_booked[slotDate]) docData.slots_booked[slotDate] = [];
+    docData.slots_booked[slotDate].push(slotTime);
+    await doctorModel.findByIdAndUpdate(docId, { slots_booked: docData.slots_booked });
+
+    // Fetch user
+    const userData = await userModel.findById(userId).select("-password");
+
+    const appointmentData = {
+      userId,
+      docId,
+      userData,
+      docData: {
+        _id: docData._id,
+        name: docData.name,
+        speciality: docData.speciality,
+        fees: docData.fees,
+        image: docData.image,
+      },
+      slotDate,
+      slotTime,
+      amount: docData.fees,
+      date: Date.now(),
+    };
+
+    const newAppointment = new appointmentModel(appointmentData);
+    await newAppointment.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Appointment booked successfully",
+      appointment: appointmentData,
+    });
+  } catch (error) {
+    console.error("Booking error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error. Please try again later.",
+    });
+  }
+};
+
+

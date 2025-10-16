@@ -23,8 +23,6 @@ const Doctors = () => {
     "Cardiologist",
     "ENT Specialist",
   ];
-
-  // ✅ Filter doctors based on speciality
   useEffect(() => {
     if (doctors.length > 0) {
       if (speciality) {
@@ -130,7 +128,7 @@ const Doctors = () => {
                   ) : (
                     <>
                       <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                      <p>Unavailable</p>
+                      <p className='text-red-500'>Unavailable</p>
                     </>
                   )}
                 </div>
