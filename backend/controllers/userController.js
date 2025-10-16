@@ -171,10 +171,13 @@ export const updateProfile = async (req, res) => {
       user.image = uploadResult.secure_url;
     }
 
+    let parsedAddress;
     if (address) {
+      parsedAddress =
+        typeof address === "string" ? JSON.parse(address) : address;
       user.address = {
-        line1: address.line1 || user.address.line1,
-        line2: address.line2 || user.address.line2,
+        line1: parsedAddress.line1 || user.address.line1,
+        line2: parsedAddress.line2 || user.address.line2,
       };
     }
 

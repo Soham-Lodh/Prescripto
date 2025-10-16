@@ -9,14 +9,13 @@ const NavBar = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
-
+  const {userData} = useContext(AppContext);
   const logout = () => {
     setToken(false);
     localStorage.removeItem("token");
     setShowDropdown(false);
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -63,7 +62,7 @@ const NavBar = () => {
             onMouseLeave={() => setShowDropdown(false)}
             onClick={() => setShowDropdown((prev) => !prev)}
           >
-            <img src={assets.profile_pic} alt="User" className="w-8 rounded-full" />
+            <img src={userData.image} alt="User" className="w-8 rounded-full" />
             <img src={assets.dropdown_icon} alt="" className="w-4" />
 
             {showDropdown && (
