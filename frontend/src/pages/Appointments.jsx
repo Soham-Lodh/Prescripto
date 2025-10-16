@@ -20,42 +20,65 @@ const Appointments = () => {
     setDocInfo(info || null);
   };
   const generateSlots = () => {
-    const today = new Date();
-    const allSlots = [];
-    for (let i = 0; i < 7; i++) {
-      let curDate = new Date(today);
-      curDate.setDate(today.getDate() + i);
-      let slots = [];
-      let startHour = 10;
-      let endHour = 16;
-      if (i === 0) {
-        const now = new Date();
-        if (now.getHours() >= endHour) {
-          slots = [];
-        } else {
-          startHour = Math.max(startHour, now.getHours());
-          let minutes = now.getMinutes();
-          let startMinutes = minutes < 30 ? 30 : 0;
-          if (minutes >= 30) startHour += 1;
-          curDate.setHours(startHour, startMinutes, 0, 0);
-        }
+  const today = new Date();
+  const allSlots = [];
+
+  for (let i = 0; i < 7; i++) {
+    let curDate = new Date(today);
+    curDate.setDate(today.getDate() + i);
+
+    let slots = [];
+    let startHour = 10;
+    let endHour = 16;
+
+    if (i === 0) {
+      const now = new Date();
+      if (now.getHours() >= endHour) {
+        slots = [];
       } else {
-        curDate.setHours(startHour, 0, 0, 0);
+        startHour = Math.max(startHour, now.getHours());
+        let minutes = now.getMinutes();
+        let startMinutes = minutes < 30 ? 30 : 0;
+        if (minutes >= 30) startHour += 1;
+        curDate.setHours(startHour, startMinutes, 0, 0);
       }
-      let slotTime = new Date(curDate);
-      while (slotTime.getHours() < endHour) {
+    } else {
+      curDate.setHours(startHour, 0, 0, 0);
+    }
+
+    let slotTime = new Date(curDate);
+
+    // Get the slotDate string for checking booked slots
+    const day = slotTime.getDate().toString().padStart(2, "0");
+    const month = (slotTime.getMonth() + 1).toString().padStart(2, "0");
+    const year = slotTime.getFullYear();
+    const slotDateStr = `${day}-${month}-${year}`;
+
+    // Fetch booked slots for this day from docInfo
+    const bookedSlots = docInfo.slots_booked?.[slotDateStr] || [];
+
+    while (slotTime.getHours() < endHour) {
+      const timeStr = slotTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      
+      // Only add slot if it hasn't been booked
+      if (!bookedSlots.includes(timeStr)) {
         slots.push({
           dateTime: new Date(slotTime),
-          time: slotTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          time: timeStr,
         });
-        slotTime.setMinutes(slotTime.getMinutes() + 30);
       }
-      allSlots.push(slots);
+
+      slotTime.setMinutes(slotTime.getMinutes() + 30);
     }
-    setDocSlots(allSlots);
-    const firstAvailableDay = allSlots.findIndex((day) => day.length > 0);
-    setSlotIndex(firstAvailableDay >= 0 ? firstAvailableDay : 0);
-  };
+
+    allSlots.push(slots);
+  }
+
+  setDocSlots(allSlots);
+  const firstAvailableDay = allSlots.findIndex((day) => day.length > 0);
+  setSlotIndex(firstAvailableDay >= 0 ? firstAvailableDay : 0);
+};
+
   const bookAppointment = async () => {
   if (!token) {
     toast.warn("Please login to book an appointment");
@@ -70,8 +93,6 @@ const Appointments = () => {
 
   try {
     setLoading(true);
-
-    // Find the actual slot object that matches selectedTime
     const slotObj = docSlots[slotIndex].find(slot => slot.time === selectedTime);
     if (!slotObj) {
       toast.error("Selected slot not found");
@@ -82,7 +103,7 @@ const Appointments = () => {
     const day = date.getDate().toString().padStart(2, "0");
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear();
-    const slotDate = `${day}-${month}-${year}`; // e.g., "16-10-2025"
+    const slotDate = `${day}-${month}-${year}`;
 
     const { data } = await axios.post(
       `${backendURL}/api/user/book-appointment`,
