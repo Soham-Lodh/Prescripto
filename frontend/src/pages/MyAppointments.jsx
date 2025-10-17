@@ -14,6 +14,7 @@ const MyAppointments = () => {
     const [day, month, year] = slotDate.split("-");
     return `${day} ${monthNames[parseInt(month, 10) - 1]} ${year}`;
   };
+  //
 
   const getUserAppointments = async () => {
     try {

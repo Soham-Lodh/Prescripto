@@ -176,7 +176,7 @@ const MyProfile = () => {
                 <option value="Female">Female</option>
               </select>
             ) : (
-              <p>{userData.gender}</p>
+              <p>{userData.gender.charAt(0).toUpperCase() + userData.gender.slice(1)}</p>
             )}
 
             <p className="font-medium text-[rgb(95,111,255)]">D.O.B.:</p>
