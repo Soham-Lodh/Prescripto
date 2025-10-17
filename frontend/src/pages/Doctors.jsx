@@ -106,7 +106,7 @@ const Doctors = () => {
         </div>
 
         {/* 🔹 Doctors Grid */}
-        <div className="w-full grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 gap-y-6">
+        <div className="w-full grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 gap-y-6 mt-2">
           {filterDoc.map((doc) => (
             <div
               key={doc._id}

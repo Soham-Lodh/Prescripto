@@ -1,4 +1,3 @@
-import validator from "validator";
 import bcrypt from "bcrypt";
 import userModel from "../models/userModel.js";
 import doctorModel from "../models/doctorModel.js";
@@ -215,7 +214,6 @@ export const bookAppointment = async (req, res) => {
     const { docId, slotDate, slotTime } = req.body;
     const userId = req.user.userId;
 
-    // Validate input
     if (!docId || !slotDate || !slotTime) {
       return res.status(400).json({
         success: false,
@@ -238,10 +236,8 @@ export const bookAppointment = async (req, res) => {
       });
     }
 
-    // Ensure slots_booked exists
     if (!docData.slots_booked) docData.slots_booked = {};
 
-    // Check if slot already booked
     if (docData.slots_booked[slotDate]?.includes(slotTime)) {
       return res.status(400).json({
         success: false,
@@ -249,12 +245,12 @@ export const bookAppointment = async (req, res) => {
       });
     }
 
-    // Book the slot
     if (!docData.slots_booked[slotDate]) docData.slots_booked[slotDate] = [];
     docData.slots_booked[slotDate].push(slotTime);
-    await doctorModel.findByIdAndUpdate(docId, { slots_booked: docData.slots_booked });
+    await doctorModel.findByIdAndUpdate(docId, {
+      slots_booked: docData.slots_booked,
+    });
 
-    // Fetch user
     const userData = await userModel.findById(userId).select("-password");
 
     const appointmentData = {
@@ -267,6 +263,7 @@ export const bookAppointment = async (req, res) => {
         speciality: docData.speciality,
         fees: docData.fees,
         image: docData.image,
+        address: docData.address,
       },
       slotDate,
       slotTime,
@@ -290,5 +287,69 @@ export const bookAppointment = async (req, res) => {
     });
   }
 };
+export const listAppointments = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const appointments = await appointmentModel
+      .find({ userId })
+      .sort({ date: -1 });
+    return res.status(200).json({
+      success: true,
+      appointments,
+    });
+  } catch (error) {
+    console.error("Fetch appointments error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+export const cancelAppointment = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { appointmentId } = req.body;
 
+    const appointmentData = await appointmentModel.findById(appointmentId);
+    if (!appointmentData) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment not found",
+      });
+    }
 
+    if (appointmentData.userId.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to cancel this appointment",
+      });
+    }
+
+    if (appointmentData.cancelled) {
+      return res.status(400).json({
+        success: false,
+        message: "Appointment is already cancelled",
+      });
+    }
+    await appointmentModel.findByIdAndUpdate(appointmentId, {
+      cancelled: true,
+    });
+    const { docId, slotDate, slotTime } = appointmentData;
+    const docData = await doctorModel.findById(docId);
+    let slots_booked = docData.slots_booked;
+    slots_booked[slotDate] = slots_booked[slotDate].filter(
+      (time) => time !== slotTime
+    );
+    await doctorModel.findByIdAndUpdate(docId, { slots_booked });
+    return res.status(200).json({
+      success: true,
+      message: "Appointment cancelled successfully",
+    });
+  } catch (error) {
+    console.error("Cancel appointment error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

@@ -7,7 +7,7 @@ const Footer = () => {
 
   return (
     <div className="md:mx-10">
-      <div className="flex flex-col sm:grid grid-cols-[3fr_1fr_1fr] gap-14 my-10 mt-40 text-sm">
+      <div className="flex flex-col sm:grid grid-cols-[3fr_1fr_1fr] gap-14 my-10 mt-40 text-md">
         <div>
           <img
             onClick={() => {
@@ -36,7 +36,7 @@ const Footer = () => {
                 navigate("/");
                 scrollTo(0, 0);
               }}
-              className="cursor-pointer"
+              className="cursor-pointer hover:text-black"
             >
               Home
             </li>
@@ -45,7 +45,7 @@ const Footer = () => {
                 navigate("/about");
                 scrollTo(0, 0);
               }}
-              className="cursor-pointer"
+              className="cursor-pointer hover:text-black"
             >
               About Us
             </li>
@@ -54,18 +54,9 @@ const Footer = () => {
                 navigate("/contact");
                 scrollTo(0, 0);
               }}
-              className="cursor-pointer"
+              className="cursor-pointer hover:text-black"
             >
               Contact Us
-            </li>
-            <li
-              onClick={() => {
-                navigate("/");
-                scrollTo(0, 0);
-              }}
-              className="cursor-pointer"
-            >
-              Privacy Policy
             </li>
           </ul>
         </div>
