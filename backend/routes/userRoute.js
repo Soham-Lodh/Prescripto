@@ -8,6 +8,7 @@ import {
   bookAppointment,
   listAppointments,
   cancelAppointment,
+  payment
 } from "../controllers/userController.js";
 import authUser from "../middleware/authUser.js";
 const userRouter = express.Router();
@@ -20,6 +21,7 @@ userRouter.post(
   authUser,
   updateProfile
 );
+userRouter.post("/payment",authUser,payment);
 userRouter.post("/book-appointment", authUser, bookAppointment);
 userRouter.get("/list-appointments", authUser, listAppointments);
 userRouter.post("/cancel-appointment", authUser, cancelAppointment);

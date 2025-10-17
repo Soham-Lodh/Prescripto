@@ -333,6 +333,7 @@ export const cancelAppointment = async (req, res) => {
     }
     await appointmentModel.findByIdAndUpdate(appointmentId, {
       cancelled: true,
+      payment:false
     });
     const { docId, slotDate, slotTime } = appointmentData;
     const docData = await doctorModel.findById(docId);
@@ -347,6 +348,54 @@ export const cancelAppointment = async (req, res) => {
     });
   } catch (error) {
     console.error("Cancel appointment error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+export const payment = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { appointmentId } = req.body;
+
+    const appointmentData = await appointmentModel.findById(appointmentId);
+    if (!appointmentData) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment not found",
+      });
+    }
+
+    if (appointmentData.userId.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to pay for this appointment",
+      });
+    }
+
+    if (appointmentData.payment) {
+      return res.status(400).json({
+        success: false,
+        message: "Appointment is already paid",
+      });
+    }
+
+    await appointmentModel.findByIdAndUpdate(appointmentId, {
+      payment: true,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Payment successful",
+      updatedAppointment: {
+        ...appointmentData.toObject(),
+        payment: true,
+      },
+    });
+
+  } catch (error) {
+    console.error("Payment error:", error);
     return res.status(500).json({
       success: false,
       message: error.message,

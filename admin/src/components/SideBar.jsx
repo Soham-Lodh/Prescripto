@@ -10,27 +10,13 @@ const SideBar = () => {
     <div className="bg-gray-200">
       {aToken && (
         <ul className="text-[#515151]">
-          <NavLink
-            to="/admin-dashboard"
-            className={({ isActive }) =>
-              `flex items-center gap-3 py-3.5 px-3 md:px-9 min-w-72 cursor-pointer ${
-                isActive
-                  ? "border-l-4 border-[rgb(95,111,255)] bg-gray-100"
-                  : ""
-              }`
-            }
-          >
-            <img src={assets.home_icon} alt="home icon" />
-            <p>Dashboard</p>
-          </NavLink>
 
           <NavLink
             to="/all-appointments"
             className={({ isActive }) =>
-              `flex items-center gap-3 py-3.5 px-3 md:px-9 min-w-72 cursor-pointer ${
-                isActive
-                  ? "border-l-4 border-[rgb(95,111,255)] bg-gray-100"
-                  : ""
+              `flex items-center gap-3 py-3.5 px-3 md:px-9 min-w-72 cursor-pointer ${isActive
+                ? "border-l-4 border-[rgb(95,111,255)] bg-gray-100"
+                : ""
               }`
             }
           >
@@ -41,10 +27,9 @@ const SideBar = () => {
           <NavLink
             to="/add-doctor"
             className={({ isActive }) =>
-              `flex items-center gap-3 py-3.5 px-3 md:px-9 min-w-72 cursor-pointer ${
-                isActive
-                  ? "border-l-4 border-[rgb(95,111,255)] bg-gray-100"
-                  : ""
+              `flex items-center gap-3 py-3.5 px-3 md:px-9 min-w-72 cursor-pointer ${isActive
+                ? "border-l-4 border-[rgb(95,111,255)] bg-gray-100"
+                : ""
               }`
             }
           >
@@ -55,10 +40,9 @@ const SideBar = () => {
           <NavLink
             to="/doctor-list"
             className={({ isActive }) =>
-              `flex items-center gap-3 py-3.5 px-3 md:px-9 min-w-72 cursor-pointer ${
-                isActive
-                  ? "border-l-4 border-[rgb(95,111,255)] bg-gray-100"
-                  : ""
+              `flex items-center gap-3 py-3.5 px-3 md:px-9 min-w-72 cursor-pointer ${isActive
+                ? "border-l-4 border-[rgb(95,111,255)] bg-gray-100"
+                : ""
               }`
             }
           >
