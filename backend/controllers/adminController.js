@@ -159,7 +159,8 @@ export const allDoctors = async (req, res) => {
 };
 export const appointmentsAdmin=async(req,res)=>{
   try{
-    const appointments=aw
+    const appointments=await appointmentModel.find({});
+    res.json({success:true,appointments});
   }
   catch (err) {
     console.error(err);

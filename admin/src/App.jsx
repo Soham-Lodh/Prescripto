@@ -4,7 +4,6 @@ import { ToastContainer, toast } from "react-toastify";
 import { AdminContext } from "./context/AdminContext.jsx";
 import NavBar from "./components/NavBar.jsx";
 import SideBar from "./components/SideBar.jsx";
-import Dashboard from "./pages/Admin/Dashboard.jsx";
 import { Routes, Route } from "react-router-dom";
 import AllAppointments from "./pages/Admin/AllAppointments.jsx";
 import AddDoctors from "./pages/Admin/AddDoctor.jsx";
