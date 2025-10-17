@@ -11,11 +11,14 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const { backendURL, setToken } = useContext(AppContext);
+
   if (localStorage.getItem("token")) {
     navigate("/");
   }
+
   const onSubmitHandler = async (event) => {
     event.preventDefault();
     setLoading(true);
@@ -56,8 +59,11 @@ const Login = () => {
   };
 
   return (
-    <form className="flex items-center" onSubmit={onSubmitHandler}>
-      <div className="flex flex-col gap-3 m-auto items-start p-8 min-w-[340px] sm:min-w-96 border rounded-xl text-zinc-600 text-sm shadow-2xl">
+    <form
+      className="flex items-center min-h-screen px-4"
+      onSubmit={onSubmitHandler}
+    >
+      <div className="flex flex-col gap-3 m-auto items-start p-8 min-w-[340px] sm:min-w-96 border rounded-xl text-zinc-600 text-sm shadow-2xl w-full max-w-md bg-white">
         <p className="text-2xl font-semibold">
           {state === "Sign Up" ? "Create Account" : "Login"}
         </p>
@@ -75,6 +81,7 @@ const Login = () => {
               onChange={(e) => setName(e.target.value)}
               value={name}
               required
+              disabled={loading}
             />
           </div>
         )}
@@ -87,18 +94,27 @@ const Login = () => {
             onChange={(e) => setEmail(e.target.value)}
             value={email}
             required
+            disabled={loading}
           />
         </div>
 
-        <div className="w-full">
+        <div className="w-full relative">
           <p>Password</p>
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             className="border border-zinc-300 rounded w-full p-2 mt-1"
             onChange={(e) => setPassword(e.target.value)}
             value={password}
             required
+            disabled={loading}
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-2 top-2 -translate-y-1/2 text-sm text-[rgb(95,111,255)] font-medium hover:underline"
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
         </div>
 
         <button
