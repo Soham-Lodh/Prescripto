@@ -3,8 +3,7 @@ import { createContext, useState } from "react";
 export const DoctorContext = createContext();
 
 const DoctorContextProvider = (props) => {
-  // Example state for doctors (you can add more)
-  const [dToken, setDToken] = useState("");
+  const [dToken, setDToken] = useState(localStorage.getItem("dToken") || "");
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
   const value = {

@@ -10,9 +10,11 @@ import AllAppointments from "./pages/Admin/AllAppointments.jsx";
 import AddDoctors from "./pages/Admin/AddDoctor.jsx";
 import DoctorsList from "./pages/Admin/DoctorsList.jsx";
 import NotFound from "./pages/NotFound.jsx";
+import {DoctorContext} from "./context/DoctorContext.jsx"
 const App = () => {
   const { aToken } = useContext(AdminContext);
-  return aToken ? (
+  const {dToken}=useContext(DoctorContext);
+  return aToken||dToken ? (
     <div className=" bg-gray-100">
       <NavBar />
       <ToastContainer />
@@ -33,6 +35,9 @@ const App = () => {
     <div className="mx-4 bg-gray-100 sm:mx-[10%]">
       <Login />
       <ToastContainer />
+      <Routes>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
     </div>
   );
 };
