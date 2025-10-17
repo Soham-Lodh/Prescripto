@@ -53,9 +53,25 @@ export const AdminContextProvider = ({ children }) => {
 
   const getAllAppointments = async () => {
     try {
-      const { data } = axios.get(`${backendUrl}/api/admin/appointments`, { headers: { aToken } });
+      const { data } =await  axios.get(`${backendUrl}/api/admin/appointments`, { headers: { aToken } });
       if (data.success) {
         setAppointments(data.appointments);
+      }
+      else {
+        toast.error(data.message);
+      }
+    }
+    catch (err) {
+      console.error(err);
+      toast.error("Something went wrong");
+    }
+  }
+  const cancelAppointment=async(appointmentId)=>{
+    try{
+      const { data } =await  axios.post(`${backendUrl}/api/admin/admin-cancel-appointment`, {appointmentId},{ headers: { aToken } });
+      if(data.success){
+        toast.success(data.message);
+        getAllAppointments();
       }
       else {
         toast.error(data.message);
@@ -75,7 +91,10 @@ export const AdminContextProvider = ({ children }) => {
         doctors,
         getAllDoctors,
         changeAvailability,
-        appointments, setAppointments, getAllAppointments
+        appointments, 
+        setAppointments,
+        getAllAppointments,
+        cancelAppointment
       }}
     >
       {children}

@@ -82,8 +82,8 @@ const AddDoctor = () => {
       className="bg-gray-100 shadow-md rounded-lg p-6 w-full max-w-6xl mx-auto space-y-8"
       onSubmit={onSubmitHandler}
     >
-      <p className="text-3xl font-semibold text-gray-700 text-center">
-        Add Doctor
+      <p className="text-center text-3xl font-bold text-gray-600 mb-12">
+        ADD <span className="text-[rgb(95,111,255)]"> DOCTOR</span>
       </p>
 
       <div className="flex flex-col items-center">

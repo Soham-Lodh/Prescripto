@@ -1,4 +1,5 @@
 import React, { useContext } from "react";
+import { Navigate } from "react-router-dom";
 import Login from "./pages/Login.jsx";
 import { ToastContainer, toast } from "react-toastify";
 import { AdminContext } from "./context/AdminContext.jsx";
@@ -8,6 +9,7 @@ import { Routes, Route } from "react-router-dom";
 import AllAppointments from "./pages/Admin/AllAppointments.jsx";
 import AddDoctors from "./pages/Admin/AddDoctor.jsx";
 import DoctorsList from "./pages/Admin/DoctorsList.jsx";
+import NotFound from "./pages/NotFound.jsx";
 const App = () => {
   const { aToken } = useContext(AdminContext);
   return aToken ? (
@@ -16,12 +18,15 @@ const App = () => {
       <ToastContainer />
       <div className="flex items-start">
         <SideBar />
-        <Routes>
-          <Route path="/" element={<></>} />
-          <Route path="/all-appointments" element={<AllAppointments />} />
-          <Route path="/add-doctor" element={<AddDoctors />} />
-          <Route path="/doctor-list" element={<DoctorsList />} />
-        </Routes>
+        <div className="flex-1">
+          <Routes>
+            <Route path="/" element={<Navigate to="/doctor-list" />} />
+            <Route path="/all-appointments" element={<AllAppointments />} />
+            <Route path="/add-doctor" element={<AddDoctors />} />
+            <Route path="/doctor-list" element={<DoctorsList />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
       </div>
     </div>
   ) : (
