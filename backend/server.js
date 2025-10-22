@@ -19,7 +19,7 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174","https://prescripto-frontend-yxxn.onrender.com"],
+    origin: ["http://localhost:5173", "http://localhost:5174","https://prescripto-frontend-yxxn.onrender.com","https://prescripto-o6es.onrender.com"],
     credentials: true,
   })
 );
