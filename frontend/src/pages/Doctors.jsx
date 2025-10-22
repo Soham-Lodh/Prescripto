@@ -12,11 +12,11 @@ const FlipCard = ({ frontContent, backContent, className = "" }) => {
       onMouseLeave={() => setIsFlipped(false)}
     >
       <div
-        className={`relative w-full h-full transition-transform duration-500 [transform-style:preserve-3d] ${
+        className={`relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d] ${
           isFlipped ? "[transform:rotateY(180deg)]" : ""
         }`}
       >
-        <div className="absolute w-full h-full [backface-visibility:hidden]">
+        <div className="absolute w-full h-full [backface-visibility:hidden] hover:bg-gray-100 transition-colors">
           {frontContent}
         </div>
         <div className="absolute w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)]">
@@ -26,6 +26,7 @@ const FlipCard = ({ frontContent, backContent, className = "" }) => {
     </div>
   );
 };
+
 
 const Doctors = () => {
   const [filterDoc, setFilterDoc] = useState([]);
@@ -162,7 +163,7 @@ const Doctors = () => {
                 </div>
               }
               backContent={
-                <div className="border border-blue-200 p-4 rounded-xl bg-white flex flex-col justify-center items-center gap-2 h-full text-center">
+                <div className="border border-blue-200 p-4 rounded-xl bg-gray-100 flex flex-col justify-center items-center gap-2 h-full text-center">
                   <p className="text-[rgb(95,111,255)] font-semibold mb-1 text-xl">{doc.name}</p>
                   <p className="text-gray-900 text-lg mb-1">{doc.speciality}</p>
                   <p className="text-gray-600 text-md mb-1">Degree: <span className="text-black">{doc.degree}</span></p>
