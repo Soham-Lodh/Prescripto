@@ -23,24 +23,27 @@ export const doctorsList = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
-export const loginDoctor=async(req,res)=>{
-  try{
-    const {email,password}=req.body;
-    const doctor=await doctorModel.findOne({email});
-    if(!doctor){
-      res.json({success:false,message:"Invalid Email"});
+export const loginDoctor = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const doctor = await doctorModel.findOne({ email });
+    if (!doctor) {
+      return res.json({ success: false, message: "Invalid Email" });
     }
-    const isMatch=await bcrypt.compare(password,doctor.password);
-    if(isMatch){
-      const token=jwt.sign({id:doctor._id},process.env.JWT_SECRET);
-      res.json({success:true,token});
+
+    const isMatch = await bcrypt.compare(password, doctor.password);
+    if (!isMatch) {
+      return res.json({ success: false, message: "Invalid Password" });
     }
-    else{
-      res.json({success:false,message:"Invalid Password"});
-    }
-  }
-  catch (error) {
+
+    const token = jwt.sign({ id: doctor._id }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
+
+    res.json({ success: true, token });
+  } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });
   }
-}
+};
