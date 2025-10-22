@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
 
-const FlipCard = ({ frontContent, backContent, className = "" }) => {
+const FlipCard = ({ frontContent, backContent, className = "", onClick }) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
   return (
@@ -10,6 +10,7 @@ const FlipCard = ({ frontContent, backContent, className = "" }) => {
       className={`relative w-full h-80 cursor-pointer [perspective:1000px] ${className}`}
       onMouseEnter={() => setIsFlipped(true)}
       onMouseLeave={() => setIsFlipped(false)}
+      onClick={onClick} // ✅ now it's defined
     >
       <div
         className={`relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d] ${
@@ -26,6 +27,7 @@ const FlipCard = ({ frontContent, backContent, className = "" }) => {
     </div>
   );
 };
+
 
 
 const Doctors = () => {
@@ -135,6 +137,7 @@ const Doctors = () => {
         <div className="w-full grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 gap-y-6 mt-2">
           {filterDoc.map((doc) => (
             <FlipCard
+              onClick={()=>navigate(`/appointments/${doc._id}`)}
               key={doc._id}
               frontContent={
                 <div className="border border-blue-200 p-2 rounded-xl overflow-hidden flex flex-col h-full">
