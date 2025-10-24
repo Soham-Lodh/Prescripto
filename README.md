@@ -3,6 +3,8 @@
 
 Prescripto is a **MERN (MongoDB, Express, React, Node.js) web application** for booking appointments with specialized doctors online. It includes a **user panel**, **doctor panel**, and **admin panel**, along with **online payment integration**.
 
+### Deployed Link - https://prescripto-frontend-yxxn.onrender.com
+
 ---
 
 ## Features
