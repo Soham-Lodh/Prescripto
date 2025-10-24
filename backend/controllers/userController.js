@@ -3,6 +3,7 @@ import userModel from "../models/userModel.js";
 import doctorModel from "../models/doctorModel.js";
 import appointmentModel from "../models/appointmentModel.js";
 import jwt from "jsonwebtoken";
+import validator from "validator";
 import { v2 as cloudinary } from "cloudinary";
 export const registerUser = async (req, res) => {
   try {
