@@ -1,35 +1,7 @@
 import React, { useContext, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
-
-const FlipCard = ({ frontContent, backContent, className = "", onClick }) => {
-  const [isFlipped, setIsFlipped] = useState(false);
-
-  return (
-    <div
-      className={`relative w-full h-80 cursor-pointer [perspective:1000px] ${className}`}
-      onMouseEnter={() => setIsFlipped(true)}
-      onMouseLeave={() => setIsFlipped(false)}
-      onClick={onClick} // ✅ now it's defined
-    >
-      <div
-        className={`relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d] ${
-          isFlipped ? "[transform:rotateY(180deg)]" : ""
-        }`}
-      >
-        <div className="absolute w-full h-full [backface-visibility:hidden] hover:bg-gray-100 transition-colors">
-          {frontContent}
-        </div>
-        <div className="absolute w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)]">
-          {backContent}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-
-
+import FlipCard from "../components/FlipCard";
 const Doctors = () => {
   const [filterDoc, setFilterDoc] = useState([]);
   const [activeSpec, setActiveSpec] = useState(null);
@@ -137,6 +109,7 @@ const Doctors = () => {
         <div className="w-full grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 gap-y-6 mt-2">
           {filterDoc.map((doc) => (
             <FlipCard
+              className='hover:translate-y-[-10px]'
               onClick={()=>navigate(`/appointments/${doc._id}`)}
               key={doc._id}
               frontContent={
