@@ -13,7 +13,6 @@ Prescripto is a **MERN (MongoDB, Express, React, Node.js) web application** for 
 - Browse and search specialized doctors
 - View doctor profiles including experience, degree, fees, and availability
 - Book appointments with preferred date/time
-- Make secure online payments
 - View booking history and upcoming appointments
 
 ### Doctor Panel
