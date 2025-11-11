@@ -34,3 +34,10 @@ body {
   scrollbar-width: thick;
   scrollbar-color: rgb(95, 111, 255) rgba(0, 0, 0, 0.1);
 }
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;    /* Firefox */
+}

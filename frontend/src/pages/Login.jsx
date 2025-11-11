@@ -7,123 +7,118 @@ import { AppContext } from "../context/AppContext";
 const Login = () => {
   const [state, setState] = useState("Sign Up");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-
   const { backendURL, setToken } = useContext(AppContext);
+  const navigate = useNavigate();
 
-  if (localStorage.getItem("token")) {
-    navigate("/");
-  }
+  if (localStorage.getItem("token")) navigate("/");
 
-  const onSubmitHandler = async (event) => {
-    event.preventDefault();
+  const onSubmitHandler = async (e) => {
+    e.preventDefault();
     setLoading(true);
     try {
-      if (state === "Sign Up") {
-        const { data } = await axios.post(`${backendURL}/api/user/register`, {
-          name,
-          email,
-          password,
-        });
-        if (data.success) {
-          toast.success("User registered successfully");
-          localStorage.setItem("token", data.token);
-          setToken(data.token);
-          navigate("/");
-        } else {
-          toast.error(data.message);
-        }
-      } else {
-        const { data } = await axios.post(`${backendURL}/api/user/login`, {
-          email,
-          password,
-        });
-        if (data.success) {
-          toast.success("Login successful");
-          localStorage.setItem("token", data.token);
-          setToken(data.token);
-          navigate("/");
-        } else {
-          toast.error(data.message);
-        }
-      }
+      const url =
+        state === "Sign Up"
+          ? `${backendURL}/api/user/register`
+          : `${backendURL}/api/user/login`;
+
+      const payload =
+        state === "Sign Up" ? { name, email, password } : { email, password };
+
+      const { data } = await axios.post(url, payload);
+      if (data.success) {
+        toast.success(state === "Sign Up" ? "Account created!" : "Login successful!");
+        localStorage.setItem("token", data.token);
+        setToken(data.token);
+        navigate("/");
+      } else toast.error(data.message);
     } catch (error) {
-      toast.error(error.response?.data?.message || error.message);
+      toast.error(error.response?.data?.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form
-      className="flex items-center min-h-screen px-4"
-      onSubmit={onSubmitHandler}
-    >
-      <div className="flex flex-col gap-3 m-auto items-start p-8 min-w-[340px] sm:min-w-96 border rounded-xl text-zinc-600 text-sm shadow-2xl w-full max-w-md bg-white">
-        <p className="text-2xl font-semibold">
-          {state === "Sign Up" ? "Create Account" : "Login"}
-        </p>
-        <p>
-          Please {state === "Sign Up" ? "Sign up" : "Login"} to book an
-          appointment
-        </p>
+    <div className="min-h-screen flex items-center justify-center bg-white px-4 py-10">
+      <form
+        onSubmit={onSubmitHandler}
+        className="bg-white border border-gray-200 shadow-2xl rounded-3xl p-8 sm:p-10 w-full max-w-md flex flex-col gap-5 text-gray-700"
+      >
+        {/* Title */}
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-1">
+            {state === "Sign Up" ? "Create Account" : "Welcome Back"}
+          </h2>
+          <p className="text-gray-500 text-sm">
+            {state === "Sign Up"
+              ? "Sign up to book your first appointment"
+              : "Login to manage your bookings"}
+          </p>
+        </div>
 
+        {/* Full Name */}
         {state === "Sign Up" && (
-          <div className="w-full">
-            <p>Full Name</p>
+          <div className="flex flex-col">
+            <label className="text-sm font-medium mb-1">Full Name</label>
             <input
               type="text"
-              className="border border-zinc-300 rounded w-full p-2 mt-1"
-              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter your name"
+              className="border border-gray-300 rounded-xl py-2.5 px-4 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={name}
+              onChange={(e) => setName(e.target.value)}
               required
               disabled={loading}
             />
           </div>
         )}
 
-        <div className="w-full">
-          <p>Email</p>
+        {/* Email */}
+        <div className="flex flex-col">
+          <label className="text-sm font-medium mb-1">Email</label>
           <input
             type="email"
-            className="border border-zinc-300 rounded w-full p-2 mt-1"
-            onChange={(e) => setEmail(e.target.value)}
+            placeholder="example@email.com"
+            className="border border-gray-300 rounded-xl py-2.5 px-4 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
             disabled={loading}
           />
         </div>
 
-        <div className="w-full relative">
-          <p>Password</p>
+        {/* Password */}
+        <div className="flex flex-col relative">
+          <label className="text-sm font-medium mb-1">Password</label>
           <input
             type={showPassword ? "text" : "password"}
-            className="border border-zinc-300 rounded w-full p-2 mt-1"
-            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter password"
+            className="border border-gray-300 rounded-xl py-2.5 px-4 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={password}
+            onChange={(e) => setPassword(e.target.value)}
             required
             disabled={loading}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-2 top-2 -translate-y-1/2 text-sm text-[rgb(95,111,255)] font-medium hover:underline"
+            className="absolute right-3 top-9 text-xs text-blue-600 hover:underline"
           >
             {showPassword ? "Hide" : "Show"}
           </button>
         </div>
 
+        {/* Submit */}
         <button
-          className="bg-[rgb(95,111,255)] text-white w-full py-2 rounded-md text-base flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           type="submit"
           disabled={loading}
+          className="bg-blue-600 text-white font-bold py-2.5 rounded-xl mt-2 hover:bg-blue-700 transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-60"
         >
           {loading ? (
-            <>
+            <div className="flex items-center justify-center gap-2">
               <svg
                 className="animate-spin h-5 w-5 text-white"
                 xmlns="http://www.w3.org/2000/svg"
@@ -145,7 +140,7 @@ const Login = () => {
                 ></path>
               </svg>
               <span>Processing...</span>
-            </>
+            </div>
           ) : state === "Sign Up" ? (
             "Create Account"
           ) : (
@@ -153,31 +148,34 @@ const Login = () => {
           )}
         </button>
 
-        {state === "Sign Up" ? (
-          <div className="flex gap-1">
-            <p>Already have an account?</p>
-            <button
-              type="button"
-              className="text-[rgb(95,111,255)]"
-              onClick={() => setState("Login")}
-            >
-              Login
-            </button>
-          </div>
-        ) : (
-          <div className="flex gap-1">
-            <p>Don't have an account?</p>
-            <button
-              type="button"
-              className="text-[rgb(95,111,255)]"
-              onClick={() => setState("Sign Up")}
-            >
-              Sign Up
-            </button>
-          </div>
-        )}
-      </div>
-    </form>
+        {/* Switch Mode */}
+        <div className="text-center text-sm text-gray-600">
+          {state === "Sign Up" ? (
+            <p>
+              Already have an account?{" "}
+              <button
+                type="button"
+                className="text-blue-600 font-semibold hover:underline"
+                onClick={() => setState("Login")}
+              >
+                Login
+              </button>
+            </p>
+          ) : (
+            <p>
+              Don’t have an account?{" "}
+              <button
+                type="button"
+                className="text-blue-600 font-semibold hover:underline"
+                onClick={() => setState("Sign Up")}
+              >
+                Sign Up
+              </button>
+            </p>
+          )}
+        </div>
+      </form>
+    </div>
   );
 };
 
