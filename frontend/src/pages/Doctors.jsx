@@ -190,118 +190,76 @@ const Doctors = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 ml-2 sm:ml-0">
-                {filterDoc.map((doc) => (
+                {filterDoc.map((item) => (
                   <FlipCard
-                    key={doc._id}
+                    key={item._id}
+                    onClick={() => navigate(`/appointments/${item._id}`)}
                     className="hover:translate-y-[-8px] transition-transform duration-300"
-                    onClick={() => navigate(`/appointments/${doc._id}`)}
                     frontContent={
-                      <div className="bg-gradient-to-br from-white to-blue-50 border border-blue-100 rounded-2xl overflow-hidden flex flex-col h-full shadow-lg hover:shadow-2xl hover:border-blue-300 transition-all cursor-pointer">
-                        <div className="relative h-96">
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
+                      <div className="bg-white border-2 border-gray-200 rounded-2xl overflow-hidden flex flex-col h-full shadow-md hover:shadow-xl transition-all cursor-pointer">
+                        <div className="relative">
                           <img
-                            src={doc.image}
-                            alt={doc.name}
-                            className="w-full h-full object-cover"
+                            className="w-full h-56 object-cover"
+                            src={item.image}
+                            alt={item.name}
                           />
-                          <div className="absolute top-4 right-4 z-20">
-                            <span
-                              className={`text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 ${
-                                doc.available
-                                  ? "bg-gradient-to-r from-green-500 to-green-600"
-                                  : "bg-gradient-to-r from-red-500 to-red-600"
-                              }`}
-                            >
-                              <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-                              {doc.available ? "Available" : "Unavailable"}
-                            </span>
+                          <div className="absolute top-3 right-3">
+                            {item.available ? (
+                              <span className="bg-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
+                                <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                                Available
+                              </span>
+                            ) : (
+                              <span className="bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
+                                <span className="w-2 h-2 bg-white rounded-full"></span>
+                                Unavailable
+                              </span>
+                            )}
                           </div>
-                          <div className="absolute bottom-0 left-0 right-0 z-20 p-4">
-                            <div className="bg-white/95 backdrop-blur-sm rounded-xl px-4 py-3 shadow-lg">
-                              <h3 className="text-gray-900 text-lg font-bold truncate">
-                                {doc.name}
-                              </h3>
-                              <p className="text-blue-600 text-sm font-semibold">
-                                {doc.speciality}
-                              </p>
-                            </div>
+                        </div>
+
+                        <div className="p-4 flex-1 flex flex-col">
+                          <h3 className="text-gray-900 text-lg font-bold mb-1 line-clamp-1">
+                            {item.name}
+                          </h3>
+                          <p className="text-blue-600 text-sm font-semibold mb-2">
+                            {item.speciality}
+                          </p>
+                          <div className="mt-auto pt-3 border-t border-gray-100">
+                            <p className="text-xs text-gray-500 text-center font-medium">
+                              Click to view details
+                            </p>
                           </div>
                         </div>
                       </div>
                     }
                     backContent={
-                      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-2xl p-6 flex flex-col h-full shadow-2xl cursor-pointer relative overflow-hidden">
-                        <div className="absolute inset-0 bg-white/5 backdrop-blur-sm"></div>
+                      <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-5 flex flex-col justify-center h-full text-center shadow-xl cursor-pointer">
+                        <div className="flex-1 flex flex-col justify-center">
+                          <h3 className="text-white font-bold text-xl mb-1">{item.name}</h3>
+                          <p className="text-blue-200 text-sm mb-4">{item.speciality}</p>
 
-                        <div className="relative z-10 flex-1 flex flex-col overflow-y-auto no-scrollbar">
-                          <div className="text-center mb-5">
-                            <h3 className="text-white font-bold text-lg leading-tight mb-1 drop-shadow-lg break-words">
-                              {doc.name}
-                            </h3>
-                            <p className="text-blue-100 text-sm font-medium">
-                              {doc.speciality}
-                            </p>
-                          </div>
-
-                          <div className="flex-1 flex items-center">
-                            <div className="w-full space-y-3 text-white bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
-                              <div className="flex justify-between items-center pb-2.5 border-b border-white/20">
-                                <div className="flex items-center gap-2">
-                                  <svg
-                                    className="w-4 h-4 text-blue-200"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                  </svg>
-                                  <span className="text-blue-200 text-xs font-medium">
-                                    Experience
-                                  </span>
-                                </div>
-                                <span className="font-bold text-sm text-white whitespace-nowrap">
-                                  {doc.experience}&nbsp;
-                                  {doc.experience === "1" ? "Year" : "Years"}
-                                </span>
-                              </div>
-
-                              <div className="flex justify-between items-center">
-                                <div className="flex items-center gap-2">
-                                  <svg
-                                    className="w-4 h-4 text-yellow-300"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                  </svg>
-                                  <span className="text-blue-200 text-xs font-medium">
-                                    Consultation Fee
-                                  </span>
-                                </div>
-                                <span className="font-bold text-lg text-yellow-300 drop-shadow-lg">
-                                  ${doc.fees}
-                                </span>
-                              </div>
+                          <div className="space-y-3 text-white">
+                            <div className="flex justify-between items-center">
+                              <span className="text-blue-200 text-sm">Degree:</span>
+                              <span className="font-semibold text-sm">{item.degree}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-blue-200 text-sm">Experience:</span>
+                              <span className="font-semibold text-sm">
+                                {item.experience} {item.experience === "1" ? "year" : "years"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-blue-200 text-sm">Consultation:</span>
+                              <span className="font-bold text-lg text-yellow-300">${item.fees}</span>
                             </div>
                           </div>
                         </div>
 
-                        <div className="relative z-20 mt-5">
-                          <button className="bg-white text-blue-700 px-6 py-3 rounded-xl font-bold text-sm hover:bg-blue-50 transition-all shadow-xl hover:shadow-2xl hover:scale-105 w-full">
-                            Book Appointment →
-                          </button>
-                        </div>
+                        <button className="mt-4 bg-white text-blue-600 px-6 py-3 rounded-lg font-bold text-sm hover:bg-blue-50 transition-all shadow-lg w-full">
+                          Book Appointment
+                        </button>
                       </div>
                     }
                   />
