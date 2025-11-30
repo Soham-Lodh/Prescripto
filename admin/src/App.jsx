@@ -10,7 +10,9 @@ import AllAppointments from "./pages/Admin/AllAppointments.jsx";
 import AddDoctors from "./pages/Admin/AddDoctor.jsx";
 import DoctorsList from "./pages/Admin/DoctorsList.jsx";
 import NotFound from "./pages/NotFound.jsx";
-import {DoctorContext} from "./context/DoctorContext.jsx"
+import {DoctorContext} from "./context/DoctorContext.jsx";
+import Messages from "./pages/Admin/Messages.jsx";
+
 const App = () => {
   const { aToken } = useContext(AdminContext);
   const {dToken}=useContext(DoctorContext);
@@ -26,6 +28,7 @@ const App = () => {
             <Route path="/all-appointments" element={<AllAppointments />} />
             <Route path="/add-doctor" element={<AddDoctors />} />
             <Route path="/doctor-list" element={<DoctorsList />} />
+            <Route path="/messages" element={<Messages/>}/>
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>

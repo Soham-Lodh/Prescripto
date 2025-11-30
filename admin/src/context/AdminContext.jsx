@@ -9,6 +9,7 @@ export const AdminContextProvider = ({ children }) => {
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const [doctors, setDoctors] = useState([]);
   const [appointments, setAppointments] = useState([]);
+  const [messages, setMessages] = useState([]);
   const getAllDoctors = async () => {
     try {
       const { data } = await axios.post(
@@ -82,6 +83,24 @@ export const AdminContextProvider = ({ children }) => {
       toast.error("Something went wrong");
     }
   }
+  const allMessages = async () => {
+    try {
+      const { data } = await axios.get(
+        `${backendUrl}/api/admin/messages`,
+        { headers: { aToken } }
+      );
+
+      if (data.success) {
+        setMessages(data.messages); // <-- FIX
+        return data.messages;
+      } else {
+        toast.error(data.message);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong");
+    }
+  };
   return (
     <AdminContext.Provider
       value={{
@@ -94,7 +113,10 @@ export const AdminContextProvider = ({ children }) => {
         appointments, 
         setAppointments,
         getAllAppointments,
-        cancelAppointment
+        cancelAppointment,
+        allMessages,
+        messages,
+        setMessages
       }}
     >
       {children}

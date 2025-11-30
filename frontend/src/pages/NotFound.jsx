@@ -7,11 +7,9 @@ const NotFound = () => {
   const textLines = ["4 0 4", "N O T", "F O U N D"];
 
   return (
-    <div className="h-[90vh] flex flex-col justify-center items-center text-center px-6 relative overflow-hidden">
-      {/* Background gradient blur */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-100 via-indigo-200 to-white blur-3xl opacity-70"></div>
-
-      {/* Fuzzy text animation */}
+    <div className="fixed inset-0 min-h-screen w-full flex flex-col justify-center items-center text-center px-6 overflow-hidden bg-white">
+      
+      {/* Fuzzy Text */}
       <div className="z-10 flex flex-col gap-2 lg:gap-3">
         {textLines.map((line, idx) => (
           <FuzzyText
@@ -29,11 +27,11 @@ const NotFound = () => {
       </div>
 
       {/* Subtitle */}
-      <p className="z-10 text-gray-600 text-lg sm:text-xl mt-4 font-medium">
+      <p className="z-10 text-gray-700 text-lg sm:text-xl mt-4 font-medium">
         The page you’re looking for doesn’t exist.
       </p>
 
-      {/* CTA button */}
+      {/* CTA */}
       <button
         onClick={() => navigate("/")}
         className="z-10 mt-8 px-8 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-semibold text-sm sm:text-base shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
@@ -41,7 +39,7 @@ const NotFound = () => {
         Go Back Home →
       </button>
 
-      {/* Decorative floating orbs */}
+      {/* Floating Orbs */}
       <div className="absolute w-48 h-48 bg-blue-300/30 rounded-full blur-3xl top-10 left-10 animate-pulse"></div>
       <div className="absolute w-64 h-64 bg-indigo-400/30 rounded-full blur-3xl bottom-10 right-10 animate-pulse"></div>
     </div>

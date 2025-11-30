@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import userModel from "../models/userModel.js";
 import doctorModel from "../models/doctorModel.js";
 import appointmentModel from "../models/appointmentModel.js";
+import contactModel from "../models/contactModel.js";
 import jwt from "jsonwebtoken";
 import validator from "validator";
 import { v2 as cloudinary } from "cloudinary";
@@ -403,3 +404,37 @@ export const payment = async (req, res) => {
     });
   }
 };
+export const contactUs=async(req,res)=>{
+  try{
+    const {name,email,message}=req.body;
+    if(!name || !email || !message){
+      return res.status(400).json({
+        success:false,
+        message:"Please fill all the fields"
+      });
+    }
+    if (!validator.isEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid email",
+      });
+    }
+    const data = await contactModel.create({
+      name,
+      email,
+      message,
+    });
+    return res.status(201).json({
+      success: true,
+      message: "Message received successfully",
+      data,
+    });
+  }
+  catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}

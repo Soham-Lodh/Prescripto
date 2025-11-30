@@ -4,7 +4,8 @@ import {
   loginAdmin,
   allDoctors,
   appointmentsAdmin,
-  adminCancelAppointment
+  adminCancelAppointment,
+  messages
 } from "../controllers/adminController.js";
 import authAdmin from "../middleware/authAdmin.js";
 import upload from "../middleware/multer.js";
@@ -17,4 +18,5 @@ adminRouter.post("/all-doctors", authAdmin, allDoctors);
 adminRouter.get("/appointments",authAdmin,appointmentsAdmin);
 adminRouter.post("/change-availability", authAdmin, changeAvailability);
 adminRouter.post("/admin-cancel-appointment",authAdmin,adminCancelAppointment);
+adminRouter.get("/messages",authAdmin,messages);
 export default adminRouter;

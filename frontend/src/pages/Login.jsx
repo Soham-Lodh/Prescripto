@@ -252,7 +252,7 @@ const Login = () => {
                 className="text-blue-600 font-semibold hover:text-blue-700 hover:underline transition-colors duration-200"
                 onClick={() => setState("Login")}
               >
-                Login here
+                Login
               </button>
             </p>
           ) : (
@@ -263,7 +263,7 @@ const Login = () => {
                 className="text-blue-600 font-semibold hover:text-blue-700 hover:underline transition-colors duration-200"
                 onClick={() => setState("Sign Up")}
               >
-                Sign up here
+                Sign up
               </button>
             </p>
           )}

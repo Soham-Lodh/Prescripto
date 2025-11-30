@@ -54,6 +54,7 @@ const NavBar = () => {
               <NavLink
                 key={idx}
                 to={item.path}
+                onClick={() => scrollTo(0, 0)}
                 className={({ isActive }) =>
                   `relative py-2 transition-colors duration-300 ${
                     isActive
