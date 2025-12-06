@@ -7,14 +7,13 @@ const TopDoctors = () => {
   const navigate = useNavigate();
   const { doctors } = useContext(AppContext);
 
-  // Determine how many doctors to show based on screen size
   const getDoctorCount = () => {
     if (typeof window !== 'undefined') {
-      if (window.innerWidth >= 1280) return 8; // xl screens
-      if (window.innerWidth >= 1024) return 6; // lg screens
-      return 4; // mobile and tablet
+      if (window.innerWidth >= 1280) return 8; 
+      if (window.innerWidth >= 1024) return 6; 
+      return 4;
     }
-    return 8; // default
+    return 8; 
   };
 
   const [doctorCount, setDoctorCount] = React.useState(getDoctorCount());
@@ -30,7 +29,6 @@ const TopDoctors = () => {
 
   return (
     <div className="flex flex-col items-center gap-6 my-20 text-gray-900 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-white">
-      {/* Header Section */}
       <div className="text-center max-w-3xl">
         <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
           Top <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-800">Doctors</span>
@@ -40,7 +38,6 @@ const TopDoctors = () => {
         </p>
       </div>
 
-      {/* Doctors Grid */}
       <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-8">
         {doctors.slice(0, doctorCount).map((item, index) => (
           <FlipCard
@@ -54,8 +51,8 @@ const TopDoctors = () => {
                     className="w-full h-56 object-cover"
                     src={item.image}
                     alt={item.name}
+                    loading="lazy"
                   />
-                  {/* Availability Badge */}
                   <div className="absolute top-3 right-3">
                     {item.available ? (
                       <span className="bg-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
@@ -69,7 +66,6 @@ const TopDoctors = () => {
                       </span>
                     )}
                   </div>
-                  {/* Top Doctor Badge */}
                   <div className="absolute top-3 left-3">
                     <span className="bg-yellow-400 text-gray-900 text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -127,7 +123,6 @@ const TopDoctors = () => {
         ))}
       </div>
 
-      {/* View All Button */}
       <button
         onClick={() => {
           navigate("/doctors");
@@ -146,7 +141,6 @@ const TopDoctors = () => {
         </svg>
       </button>
 
-      {/* Bottom Decorative Stats */}
       <div className="grid grid-cols-3 gap-6 w-full max-w-4xl mt-12 pt-12 border-t border-gray-200">
         <div className="text-center">
           <p className="text-4xl font-bold text-blue-600 mb-2">{doctors.length}+</p>

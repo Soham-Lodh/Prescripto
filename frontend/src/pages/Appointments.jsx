@@ -1,6 +1,7 @@
 import React, { useContext, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Helmet } from "react-helmet-async";
 import axios from "axios";
 import { AppContext } from "../context/AppContext";
 import { assets } from "../assets/assets_frontend/assets";
@@ -88,9 +89,6 @@ const Appointments = () => {
     setSlotIndex(firstAvailableDay >= 0 ? firstAvailableDay : 0);
   };
 
-
-
-
   const bookAppointment = async () => {
     if (!token) {
       toast.warn("Please login to book an appointment");
@@ -159,6 +157,11 @@ const Appointments = () => {
 
   return (
     <div className="px-4 sm:px-8 lg:px-16 mt-6 sm:mt-12">
+      <Helmet>
+        <title>{`Book ${docInfo.name} | Prescripto`}</title>
+        <meta name="description" content={`Book an appointment with ${docInfo.name}, a specialist in ${docInfo.speciality}.`} />
+      </Helmet>
+
       <div className="flex flex-col sm:flex-row gap-6">
         <div className="flex-shrink-0">
           <img

@@ -5,6 +5,8 @@ import doctorModel from "../models/doctorModel.js";
 import jwt from "jsonwebtoken";
 import appointmentModel from "../models/appointmentModel.js";
 import contactModel from "../models/contactModel.js";
+import userModel from "../models/userModel.js";
+
 export const addDoctor = async (req, res) => {
   try {
     const {
@@ -158,12 +160,12 @@ export const allDoctors = async (req, res) => {
     });
   }
 };
-export const appointmentsAdmin=async(req,res)=>{
-  try{
-    const appointments=await appointmentModel.find({});
-    res.json({success:true,appointments});
-  }
-  catch (err) {
+
+export const appointmentsAdmin = async (req, res) => {
+  try {
+    const appointments = await appointmentModel.find({});
+    res.json({ success: true, appointments });
+  } catch (err) {
     console.error(err);
     return res.json({
       success: false,
@@ -171,7 +173,8 @@ export const appointmentsAdmin=async(req,res)=>{
       error: err.message,
     });
   }
-}
+};
+
 export const adminCancelAppointment = async (req, res) => {
   try {
     const { appointmentId } = req.body;
@@ -192,7 +195,7 @@ export const adminCancelAppointment = async (req, res) => {
     }
     await appointmentModel.findByIdAndUpdate(appointmentId, {
       cancelled: true,
-      payment:false
+      payment: false,
     });
     const { docId, slotDate, slotTime } = appointmentData;
     const docData = await doctorModel.findById(docId);
@@ -214,16 +217,35 @@ export const adminCancelAppointment = async (req, res) => {
   }
 };
 
-export const messages=async(req,res)=>{
-  try{
-    const messages=await contactModel.find({});
-    return res.json({success:true,messages});
-  }
-  catch(err){
+export const messages = async (req, res) => {
+  try {
+    const messages = await contactModel.find({});
+    return res.json({ success: true, messages });
+  } catch (err) {
     console.error(err);
     return res.json({
       success: false,
       message: err.message,
     });
   }
-}
+};
+
+export const adminDashboard = async (req, res) => {
+  try {
+    const doctors = await doctorModel.find({});
+    const users = await userModel.find({});
+    const appointments = await appointmentModel.find({});
+
+    const dashData = {
+      doctors: doctors.length,
+      appointments: appointments.length,
+      patients: users.length,
+      latestAppointments: appointments.reverse().slice(0, 5),
+    };
+
+    res.json({ success: true, dashData });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};

@@ -1,5 +1,6 @@
 import React, { useContext, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { AppContext } from "../context/AppContext";
 import FlipCard from "../components/FlipCard";
 
@@ -7,6 +8,7 @@ const Doctors = () => {
   const [filterDoc, setFilterDoc] = useState([]);
   const [activeSpec, setActiveSpec] = useState(null);
   const [showFilter, setShowFilter] = useState(false);
+  const [sortOrder, setSortOrder] = useState("");
 
   const { speciality } = useParams();
   const { doctors } = useContext(AppContext);
@@ -25,21 +27,32 @@ const Doctors = () => {
     "ENT Specialist",
   ];
 
+  const applyFilterAndSort = () => {
+    let filtered = [...doctors];
+
+    if (speciality) {
+      filtered = filtered.filter(
+        (doc) => doc.speciality?.toLowerCase() === speciality.toLowerCase()
+      );
+      setActiveSpec(speciality);
+    } else {
+      setActiveSpec(null);
+    }
+
+    if (sortOrder === "low-high") {
+      filtered.sort((a, b) => a.fees - b.fees);
+    } else if (sortOrder === "high-low") {
+      filtered.sort((a, b) => b.fees - a.fees);
+    }
+
+    setFilterDoc(filtered);
+  };
+
   useEffect(() => {
     if (doctors.length > 0) {
-      if (speciality) {
-        setFilterDoc(
-          doctors.filter(
-            (doc) => doc.speciality?.toLowerCase() === speciality.toLowerCase()
-          )
-        );
-        setActiveSpec(speciality);
-      } else {
-        setFilterDoc(doctors);
-        setActiveSpec(null);
-      }
+      applyFilterAndSort();
     }
-  }, [doctors, speciality]);
+  }, [doctors, speciality, sortOrder]);
 
   if (!doctors || doctors.length === 0)
     return (
@@ -53,6 +66,18 @@ const Doctors = () => {
 
   return (
     <div className="px-3 sm:px-6 py-8 max-w-7xl mx-auto">
+      <Helmet>
+        <title>
+          {speciality ? `${speciality}s` : "All Doctors"} | Prescripto
+        </title>
+        <meta
+          name="description"
+          content={`Browse our list of ${
+            speciality || "expert"
+          } doctors and book your appointment online.`}
+        />
+      </Helmet>
+      
       {/* Header */}
       <div className="text-center mb-10">
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
@@ -64,11 +89,12 @@ const Doctors = () => {
         </p>
       </div>
 
-      {/* Mobile Filter */}
-      <div className="sm:hidden flex justify-between items-center mb-6">
+      {/* Filter and Sort Controls */}
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        {/* Mobile Filter Toggle */}
         <button
           onClick={() => setShowFilter(!showFilter)}
-          className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 shadow-md hover:shadow-lg transition-all"
+          className="sm:hidden w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
         >
           <svg
             className="w-5 h-5"
@@ -85,19 +111,21 @@ const Doctors = () => {
           </svg>
           {showFilter ? "Close Filters" : "Show Filters"}
         </button>
-        {activeSpec && (
-          <button
-            onClick={() => {
-              navigate("/doctors");
-              setActiveSpec(null);
-            }}
-            className="text-blue-600 font-medium text-sm hover:text-blue-700 transition-colors"
-          >
-            Clear Filter
-          </button>
-        )}
+
+        {/* Sort Dropdown */}
+        <div className="w-full sm:w-auto flex justify-end">
+            <select 
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="border-2 border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500 text-gray-700 bg-white"
+            >
+              <option value="">Sort by: Relevance</option>
+              <option value="low-high">Price: Low to High</option>
+              <option value="high-low">Price: High to Low</option>
+            </select>
+        </div>
       </div>
 
+      {/* Mobile Filter Panel */}
       {showFilter && (
         <div className="sm:hidden bg-white rounded-xl shadow-lg p-4 mb-6 border border-gray-200">
           <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
@@ -120,12 +148,23 @@ const Doctors = () => {
                 {spec}
               </button>
             ))}
+            {activeSpec && (
+              <button
+                onClick={() => {
+                  navigate("/doctors");
+                  setShowFilter(false);
+                }}
+                className="col-span-2 text-blue-600 font-medium text-sm hover:text-blue-700 transition-colors mt-2"
+              >
+                Clear Filters
+              </button>
+            )}
           </div>
         </div>
       )}
 
       <div className="flex flex-col lg:flex-row gap-8 items-start">
-        {/* Desktop Filter */}
+        {/* Desktop Filter Sidebar */}
         <div className="hidden sm:block w-full lg:w-64 flex-shrink-0">
           <div className="bg-white rounded-xl shadow-md p-6 sticky top-4 border border-gray-100">
             <div className="flex items-center justify-between mb-4">
@@ -157,7 +196,7 @@ const Doctors = () => {
           </div>
         </div>
 
-        {/* Doctor Cards */}
+        {/* Doctor Cards Grid */}
         <div className="flex-1 w-full">
           {filterDoc.length === 0 ? (
             <div className="text-center py-16 bg-gray-50 rounded-xl">
@@ -202,6 +241,7 @@ const Doctors = () => {
                             className="w-full h-56 object-cover"
                             src={item.image}
                             alt={item.name}
+                            loading="lazy"
                           />
                           <div className="absolute top-3 right-3">
                             {item.available ? (

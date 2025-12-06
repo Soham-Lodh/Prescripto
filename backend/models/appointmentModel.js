@@ -3,10 +3,12 @@ const appointmentSchema = new mongoose.Schema({
   userId: {
     type: String,
     required: true,
+    index: true,
   },
   docId: {
     type: String,
     required: true,
+    index: true,
   },
   slotDate: {
     type: String,
