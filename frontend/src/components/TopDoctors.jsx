@@ -7,6 +7,12 @@ const TopDoctors = () => {
   const navigate = useNavigate();
   const { doctors } = useContext(AppContext);
 
+  const formatExperience = (exp) => {
+    const num = Number(exp);
+    if (isNaN(num)) return `Experience: ${exp}`;
+    return `Experience: ${num} ${num === 1 ? "year" : "years"}`;
+  };
+
   const getDoctorCount = () => {
     if (typeof window !== "undefined") {
       if (window.innerWidth >= 1280) return 8;
@@ -19,10 +25,7 @@ const TopDoctors = () => {
   const [doctorCount, setDoctorCount] = React.useState(getDoctorCount());
 
   React.useEffect(() => {
-    const handleResize = () => {
-      setDoctorCount(getDoctorCount());
-    };
-
+    const handleResize = () => setDoctorCount(getDoctorCount());
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -58,7 +61,6 @@ const TopDoctors = () => {
                     loading="lazy"
                   />
 
-                  {/* Availability Tag */}
                   <div className="absolute top-3 right-3 flex flex-col gap-2">
                     {item.available ? (
                       <span className="bg-green-500/90 backdrop-blur-sm text-white text-[10px] uppercase font-bold px-2 py-1 rounded shadow-sm">
@@ -76,15 +78,14 @@ const TopDoctors = () => {
                   <h3 className="text-gray-900 text-lg font-bold line-clamp-1">
                     {item.name}
                   </h3>
+
                   <p className="text-blue-600 text-sm font-semibold mb-3">
                     {item.speciality}
                   </p>
 
                   <div className="flex justify-between items-center text-sm text-gray-500 mt-auto pt-4 border-t border-gray-100">
-                    <span>{item.experience} Exp</span>
-                    <span className="font-bold text-gray-700">
-                      ${item.fees}
-                    </span>
+                    <span>{formatExperience(item.experience)}</span>
+                    <span className="font-bold text-gray-700">${item.fees}</span>
                   </div>
                 </div>
               </div>
@@ -93,12 +94,13 @@ const TopDoctors = () => {
               <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 flex flex-col justify-center h-full text-center shadow-xl cursor-pointer text-white">
                 <div className="flex-1 flex flex-col justify-center">
                   <h3 className="font-bold text-xl mb-1">{item.name}</h3>
+
                   <p className="text-blue-100 text-sm mb-4">{item.degree}</p>
 
                   <div className="space-y-2 text-sm opacity-90 mb-4">
                     <p>Spec: {item.speciality}</p>
                     <p>Fees: ${item.fees}</p>
-                    <p>{item.experience} Experience</p>
+                    <p>{formatExperience(item.experience)}</p>
                   </div>
 
                   {item.about && (
@@ -131,20 +133,13 @@ const TopDoctors = () => {
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M13 7l5 5m0 0l-5 5m5-5H6"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
         </svg>
       </button>
 
       <div className="grid grid-cols-3 gap-6 w-full max-w-4xl mt-12 pt-12 border-t border-gray-200">
         <div className="text-center">
-          <p className="text-4xl font-bold text-blue-600 mb-2">
-            {doctors.length}+
-          </p>
+          <p className="text-4xl font-bold text-blue-600 mb-2">{doctors.length}+</p>
           <p className="text-gray-600 text-sm font-medium">Expert Doctors</p>
         </div>
         <div className="text-center">

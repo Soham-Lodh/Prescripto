@@ -14,30 +14,28 @@ import Footer from "./components/Footer";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+import AOS from "aos";
+import "aos/dist/aos.css";
+import { useEffect } from "react";
+
 const App = () => {
   const location = useLocation();
 
-  // All routes that SHOULD show navbar & footer
-  const layoutRoutes = [
-    "/", 
-    "/doctors",
-    "/about",
-    "/contact",
-    "/my-appointments",
-    "/my-profile",
-    "/appointments",
-  ];
+  useEffect(() => {
+    AOS.init({
+      duration: 700,
+      easing: "ease-out",
+      once: false,
+      offset: 100,
+    });
+  }, [location.pathname]);
 
-  const basePath = "/" + location.pathname.split("/")[1];
-
-  const hideLayout =
-    location.pathname === "/login" || !layoutRoutes.includes(basePath);
+  const noLayout = location.pathname === "/login";
 
   return (
     <div className="mx-4 sm:mx-[10%]">
       <ScrollToTop />
-
-      {!hideLayout && <NavBar />}
+      {!noLayout && <NavBar />}
       <ToastContainer />
 
       <Routes>
@@ -53,7 +51,7 @@ const App = () => {
         <Route path="*" element={<NotFound />} />
       </Routes>
 
-      {!hideLayout && <Footer />}
+      {!noLayout && <Footer />}
     </div>
   );
 };

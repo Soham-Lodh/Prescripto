@@ -16,6 +16,12 @@ const Doctors = () => {
   const { doctors } = useContext(AppContext);
   const navigate = useNavigate();
 
+  const formatExperience = (exp) => {
+    const num = Number(exp);
+    if (isNaN(num)) return `Experience: ${exp}`;
+    return `Experience: ${num} ${num === 1 ? "year" : "years"}`;
+  };
+  
   const doctorTypes = [
     "General Physician",
     "Gynecologist",
@@ -63,7 +69,8 @@ const Doctors = () => {
 
   useEffect(() => {
     setIsLoading(true); // Reset loading on dep change
-    if (doctors.length >= 0) { // Check length >=0 so it clears if filtered to empty
+    if (doctors.length >= 0) {
+      // Check length >=0 so it clears if filtered to empty
       applyFilterAndSort();
     }
   }, [doctors, speciality, sortOrder, searchTerm]);
@@ -93,7 +100,7 @@ const Doctors = () => {
           } doctors and book your appointment online.`}
         />
       </Helmet>
-      
+
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
@@ -107,15 +114,25 @@ const Doctors = () => {
       {/* SEARCH BAR (New UX) */}
       <div className="flex justify-center mb-10">
         <div className="relative w-full max-w-lg">
-          <input 
+          <input
             type="text"
             placeholder="Search doctors by name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-12 pr-4 py-3 rounded-full border-2 border-gray-200 focus:border-blue-500 focus:outline-none transition-colors shadow-sm"
           />
-          <svg className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          <svg
+            className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
           </svg>
         </div>
       </div>
@@ -132,14 +149,14 @@ const Doctors = () => {
 
         {/* Sort Dropdown */}
         <div className="w-full sm:w-auto flex justify-end">
-            <select 
-              onChange={(e) => setSortOrder(e.target.value)}
-              className="border-2 border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500 text-gray-700 bg-white"
-            >
-              <option value="">Sort by: Relevance</option>
-              <option value="low-high">Price: Low to High</option>
-              <option value="high-low">Price: High to Low</option>
-            </select>
+          <select
+            onChange={(e) => setSortOrder(e.target.value)}
+            className="border-2 border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500 text-gray-700 bg-white"
+          >
+            <option value="">Sort by: Relevance</option>
+            <option value="low-high">Price: Low to High</option>
+            <option value="high-low">Price: High to Low</option>
+          </select>
         </div>
       </div>
 
@@ -219,13 +236,20 @@ const Doctors = () => {
           {isLoading ? (
             /* Render Skeletons while loading */
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((n) => <SkeletonCard key={n} />)}
+              {[1, 2, 3, 4, 5, 6].map((n) => (
+                <SkeletonCard key={n} />
+              ))}
             </div>
           ) : filterDoc.length === 0 ? (
             <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-              <p className="text-gray-600 text-lg font-medium">No doctors found matching criteria.</p>
-              <button 
-                onClick={() => { navigate("/doctors"); setSearchTerm(""); }}
+              <p className="text-gray-600 text-lg font-medium">
+                No doctors found matching criteria.
+              </p>
+              <button
+                onClick={() => {
+                  navigate("/doctors");
+                  setSearchTerm("");
+                }}
                 className="mt-3 text-blue-600 underline font-medium"
               >
                 Clear all filters
@@ -252,17 +276,17 @@ const Doctors = () => {
                             alt={item.name}
                             loading="lazy"
                           />
-                          {/* Tags */}
+
                           <div className="absolute top-3 right-3 flex flex-col gap-2">
-                             {item.available ? (
+                            {item.available ? (
                               <span className="bg-green-500/90 backdrop-blur-sm text-white text-[10px] uppercase font-bold px-2 py-1 rounded shadow-sm">
                                 Available
                               </span>
-                             ) : (
+                            ) : (
                               <span className="bg-red-500/90 backdrop-blur-sm text-white text-[10px] uppercase font-bold px-2 py-1 rounded shadow-sm">
                                 Unavailable
                               </span>
-                             )}
+                            )}
                           </div>
                         </div>
 
@@ -270,12 +294,16 @@ const Doctors = () => {
                           <h3 className="text-gray-900 text-lg font-bold line-clamp-1">
                             {item.name}
                           </h3>
+
                           <p className="text-blue-600 text-sm font-semibold mb-3">
                             {item.speciality}
                           </p>
+
                           <div className="flex justify-between items-center text-sm text-gray-500 mt-auto pt-4 border-t border-gray-100">
-                             <span>{item.experience} Exp</span>
-                             <span className="font-bold text-gray-700">${item.fees}</span>
+                            <span>{formatExperience(item.experience)}</span>
+                            <span className="font-bold text-gray-700">
+                              ${item.fees}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -283,18 +311,25 @@ const Doctors = () => {
                     backContent={
                       <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 flex flex-col justify-center h-full text-center shadow-xl cursor-pointer text-white">
                         <div className="flex-1 flex flex-col justify-center">
-                          <h3 className="font-bold text-xl mb-1">{item.name}</h3>
-                          <p className="text-blue-100 text-sm mb-4">{item.degree}</p>
+                          <h3 className="font-bold text-xl mb-1">
+                            {item.name}
+                          </h3>
+
+                          <p className="text-blue-100 text-sm mb-4">
+                            {item.degree}
+                          </p>
 
                           <div className="space-y-2 text-sm opacity-90 mb-4">
-                             <p>Spec: {item.speciality}</p>
-                             <p>Fees: ${item.fees}</p>
-                             <p>{item.experience} Experience</p>
+                            <p>Spec: {item.speciality}</p>
+                            <p>Fees: ${item.fees}</p>
+                            <p>{formatExperience(item.experience)}</p>
                           </div>
-                          
-                          <p className="text-xs text-blue-200 line-clamp-3 italic mb-4">
-                            "{item.about}"
-                          </p>
+
+                          {item.about && (
+                            <p className="text-xs text-blue-200 line-clamp-3 italic mb-4">
+                              "{item.about}"
+                            </p>
+                          )}
                         </div>
 
                         <button className="bg-white text-blue-700 px-6 py-2 rounded-lg font-bold text-sm shadow-md hover:bg-gray-50 w-full">
