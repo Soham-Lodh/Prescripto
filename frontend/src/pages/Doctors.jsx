@@ -9,6 +9,8 @@ const Doctors = () => {
   const [activeSpec, setActiveSpec] = useState(null);
   const [showFilter, setShowFilter] = useState(false);
   const [sortOrder, setSortOrder] = useState("");
+  const [searchTerm, setSearchTerm] = useState(""); // 1. Added Search Term
+  const [isLoading, setIsLoading] = useState(true); // 2. Added Loading State
 
   const { speciality } = useParams();
   const { doctors } = useContext(AppContext);
@@ -30,6 +32,7 @@ const Doctors = () => {
   const applyFilterAndSort = () => {
     let filtered = [...doctors];
 
+    // Filter by Speciality
     if (speciality) {
       filtered = filtered.filter(
         (doc) => doc.speciality?.toLowerCase() === speciality.toLowerCase()
@@ -39,6 +42,14 @@ const Doctors = () => {
       setActiveSpec(null);
     }
 
+    // Filter by Search Name (UX Improvement)
+    if (searchTerm) {
+      filtered = filtered.filter((doc) =>
+        doc.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Sort by Fees
     if (sortOrder === "low-high") {
       filtered.sort((a, b) => a.fees - b.fees);
     } else if (sortOrder === "high-low") {
@@ -46,23 +57,28 @@ const Doctors = () => {
     }
 
     setFilterDoc(filtered);
+    // Mimic small loading delay if data updates instantly to smooth UX
+    setTimeout(() => setIsLoading(false), 300);
   };
 
   useEffect(() => {
-    if (doctors.length > 0) {
+    setIsLoading(true); // Reset loading on dep change
+    if (doctors.length >= 0) { // Check length >=0 so it clears if filtered to empty
       applyFilterAndSort();
     }
-  }, [doctors, speciality, sortOrder]);
+  }, [doctors, speciality, sortOrder, searchTerm]);
 
-  if (!doctors || doctors.length === 0)
-    return (
-      <div className="min-h-[400px] flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg font-medium">Loading doctors...</p>
-        </div>
+  // --- SKELETON COMPONENT (Performance UX) ---
+  const SkeletonCard = () => (
+    <div className="bg-white border-2 border-gray-100 rounded-2xl p-0 overflow-hidden shadow-sm animate-pulse h-96">
+      <div className="bg-gray-200 h-56 w-full"></div>
+      <div className="p-4 space-y-3">
+        <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        <div className="mt-4 h-4 bg-gray-200 rounded w-full"></div>
       </div>
-    );
+    </div>
+  );
 
   return (
     <div className="px-3 sm:px-6 py-8 max-w-7xl mx-auto">
@@ -79,14 +95,29 @@ const Doctors = () => {
       </Helmet>
       
       {/* Header */}
-      <div className="text-center mb-10">
+      <div className="text-center mb-8">
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
           Our Specialized Doctors
         </h1>
         <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto">
-          Browse through our list of experienced and specialized doctors to find
-          the perfect match for your healthcare needs.
+          Find the best healthcare professionals for your needs.
         </p>
+      </div>
+
+      {/* SEARCH BAR (New UX) */}
+      <div className="flex justify-center mb-10">
+        <div className="relative w-full max-w-lg">
+          <input 
+            type="text"
+            placeholder="Search doctors by name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 rounded-full border-2 border-gray-200 focus:border-blue-500 focus:outline-none transition-colors shadow-sm"
+          />
+          <svg className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
       </div>
 
       {/* Filter and Sort Controls */}
@@ -94,22 +125,9 @@ const Doctors = () => {
         {/* Mobile Filter Toggle */}
         <button
           onClick={() => setShowFilter(!showFilter)}
-          className="sm:hidden w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
+          className="sm:hidden w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center gap-2 shadow-md"
         >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 4h18M4 8h16M6 12h12M8 16h8M10 20h4"
-            />
-          </svg>
-          {showFilter ? "Close Filters" : "Show Filters"}
+          {showFilter ? "Close Filters" : "Filter by Speciality"}
         </button>
 
         {/* Sort Dropdown */}
@@ -128,9 +146,6 @@ const Doctors = () => {
       {/* Mobile Filter Panel */}
       {showFilter && (
         <div className="sm:hidden bg-white rounded-xl shadow-lg p-4 mb-6 border border-gray-200">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
-            Filter by Speciality
-          </h3>
           <div className="grid grid-cols-2 gap-2">
             {doctorTypes.map((spec) => (
               <button
@@ -141,8 +156,8 @@ const Doctors = () => {
                 }}
                 className={`text-sm px-3 py-2.5 rounded-lg border-2 transition-all font-medium ${
                   activeSpec === spec
-                    ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white border-blue-600 shadow-md"
-                    : "bg-white text-gray-700 border-gray-200 hover:border-blue-500 hover:text-blue-600"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-gray-700 border-gray-200 hover:border-blue-500"
                 }`}
               >
                 {spec}
@@ -154,7 +169,7 @@ const Doctors = () => {
                   navigate("/doctors");
                   setShowFilter(false);
                 }}
-                className="col-span-2 text-blue-600 font-medium text-sm hover:text-blue-700 transition-colors mt-2"
+                className="col-span-2 text-blue-600 font-medium text-sm mt-2"
               >
                 Clear Filters
               </button>
@@ -169,12 +184,15 @@ const Doctors = () => {
           <div className="bg-white rounded-xl shadow-md p-6 sticky top-4 border border-gray-100">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-gray-900">Specialities</h3>
-              {activeSpec && (
+              {(activeSpec || searchTerm) && (
                 <button
-                  onClick={() => navigate("/doctors")}
+                  onClick={() => {
+                    navigate("/doctors");
+                    setSearchTerm("");
+                  }}
                   className="text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors"
                 >
-                  Clear
+                  Clear All
                 </button>
               )}
             </div>
@@ -183,10 +201,10 @@ const Doctors = () => {
                 <button
                   key={spec}
                   onClick={() => navigate(`/doctors/${spec}`)}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-300 font-medium text-sm border-2 ${
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm border-2 ${
                     activeSpec === spec
-                      ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white border-blue-600 shadow-md transform scale-[1.02]"
-                      : "bg-gray-50 text-gray-700 border-transparent hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200"
+                      ? "bg-blue-50 text-blue-700 border-blue-500"
+                      : "bg-gray-50 text-gray-700 border-transparent hover:bg-white hover:border-gray-300"
                   }`}
                 >
                   {spec}
@@ -198,107 +216,89 @@ const Doctors = () => {
 
         {/* Doctor Cards Grid */}
         <div className="flex-1 w-full">
-          {filterDoc.length === 0 ? (
-            <div className="text-center py-16 bg-gray-50 rounded-xl">
-              <svg
-                className="w-16 h-16 text-gray-400 mx-auto mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          {isLoading ? (
+            /* Render Skeletons while loading */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((n) => <SkeletonCard key={n} />)}
+            </div>
+          ) : filterDoc.length === 0 ? (
+            <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+              <p className="text-gray-600 text-lg font-medium">No doctors found matching criteria.</p>
+              <button 
+                onClick={() => { navigate("/doctors"); setSearchTerm(""); }}
+                className="mt-3 text-blue-600 underline font-medium"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <p className="text-gray-600 text-lg font-medium">No doctors found</p>
-              <p className="text-gray-500 text-sm mt-2">
-                Try selecting a different speciality
-              </p>
+                Clear all filters
+              </button>
             </div>
           ) : (
             <>
-              <div className="mb-4 text-sm text-gray-600 font-medium">
-                Showing {filterDoc.length}{" "}
-                {filterDoc.length === 1 ? "doctor" : "doctors"}
-                {activeSpec && (
-                  <span className="text-blue-600"> in {activeSpec}</span>
-                )}
+              <div className="mb-4 text-sm text-gray-600 font-medium flex justify-between items-center">
+                <span>Showing {filterDoc.length} doctors</span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 ml-2 sm:ml-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
                 {filterDoc.map((item) => (
                   <FlipCard
                     key={item._id}
                     onClick={() => navigate(`/appointments/${item._id}`)}
-                    className="hover:translate-y-[-8px] transition-transform duration-300"
+                    className="hover:translate-y-[-5px] transition-transform duration-300"
                     frontContent={
                       <div className="bg-white border-2 border-gray-200 rounded-2xl overflow-hidden flex flex-col h-full shadow-md hover:shadow-xl transition-all cursor-pointer">
-                        <div className="relative">
+                        <div className="relative h-60 overflow-hidden bg-gray-100">
                           <img
-                            className="w-full h-56 object-cover"
+                            className="w-full h-full object-cover object-top"
                             src={item.image}
                             alt={item.name}
                             loading="lazy"
                           />
-                          <div className="absolute top-3 right-3">
-                            {item.available ? (
-                              <span className="bg-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
-                                <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                          {/* Tags */}
+                          <div className="absolute top-3 right-3 flex flex-col gap-2">
+                             {item.available ? (
+                              <span className="bg-green-500/90 backdrop-blur-sm text-white text-[10px] uppercase font-bold px-2 py-1 rounded shadow-sm">
                                 Available
                               </span>
-                            ) : (
-                              <span className="bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
-                                <span className="w-2 h-2 bg-white rounded-full"></span>
+                             ) : (
+                              <span className="bg-red-500/90 backdrop-blur-sm text-white text-[10px] uppercase font-bold px-2 py-1 rounded shadow-sm">
                                 Unavailable
                               </span>
-                            )}
+                             )}
                           </div>
                         </div>
 
-                        <div className="p-4 flex-1 flex flex-col">
-                          <h3 className="text-gray-900 text-lg font-bold mb-1 line-clamp-1">
+                        <div className="p-5 flex-1 flex flex-col">
+                          <h3 className="text-gray-900 text-lg font-bold line-clamp-1">
                             {item.name}
                           </h3>
-                          <p className="text-blue-600 text-sm font-semibold mb-2">
+                          <p className="text-blue-600 text-sm font-semibold mb-3">
                             {item.speciality}
                           </p>
-                          <div className="mt-auto pt-3 border-t border-gray-100">
-                            <p className="text-xs text-gray-500 text-center font-medium">
-                              Click to view details
-                            </p>
+                          <div className="flex justify-between items-center text-sm text-gray-500 mt-auto pt-4 border-t border-gray-100">
+                             <span>{item.experience} Exp</span>
+                             <span className="font-bold text-gray-700">${item.fees}</span>
                           </div>
                         </div>
                       </div>
                     }
                     backContent={
-                      <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-5 flex flex-col justify-center h-full text-center shadow-xl cursor-pointer">
+                      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 flex flex-col justify-center h-full text-center shadow-xl cursor-pointer text-white">
                         <div className="flex-1 flex flex-col justify-center">
-                          <h3 className="text-white font-bold text-xl mb-1">{item.name}</h3>
-                          <p className="text-blue-200 text-sm mb-4">{item.speciality}</p>
+                          <h3 className="font-bold text-xl mb-1">{item.name}</h3>
+                          <p className="text-blue-100 text-sm mb-4">{item.degree}</p>
 
-                          <div className="space-y-3 text-white">
-                            <div className="flex justify-between items-center">
-                              <span className="text-blue-200 text-sm">Degree:</span>
-                              <span className="font-semibold text-sm">{item.degree}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-blue-200 text-sm">Experience:</span>
-                              <span className="font-semibold text-sm">
-                                {item.experience} {item.experience === "1" ? "year" : "years"}
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-blue-200 text-sm">Consultation:</span>
-                              <span className="font-bold text-lg text-yellow-300">${item.fees}</span>
-                            </div>
+                          <div className="space-y-2 text-sm opacity-90 mb-4">
+                             <p>Spec: {item.speciality}</p>
+                             <p>Fees: ${item.fees}</p>
+                             <p>{item.experience} Experience</p>
                           </div>
+                          
+                          <p className="text-xs text-blue-200 line-clamp-3 italic mb-4">
+                            "{item.about}"
+                          </p>
                         </div>
 
-                        <button className="mt-4 bg-white text-blue-600 px-6 py-3 rounded-lg font-bold text-sm hover:bg-blue-50 transition-all shadow-lg w-full">
-                          Book Appointment
+                        <button className="bg-white text-blue-700 px-6 py-2 rounded-lg font-bold text-sm shadow-md hover:bg-gray-50 w-full">
+                          Book Now
                         </button>
                       </div>
                     }
