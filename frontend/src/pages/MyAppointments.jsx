@@ -2,6 +2,7 @@ import React, { useContext, useState, useEffect } from "react";
 import { AppContext } from "../context/AppContext";
 import { toast } from "react-toastify";
 import axios from "axios";
+import AOS from "aos";
 
 const MyAppointments = () => {
   const { backendURL, token, getDoctorsData } = useContext(AppContext);
@@ -54,46 +55,57 @@ const MyAppointments = () => {
   };
 
   const handlePayment = async (appointmentId) => {
-  try {
-    setLoadingPayment(appointmentId);
-    const { data } = await axios.post(
-      `${backendURL}/api/user/payment`,
-      { appointmentId },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    if (data.success) {
-      toast.success(data.message);
-      setAppointments((prevAppointments) =>
-        prevAppointments.map((item) =>
-          item._id === appointmentId ? { ...item, payment: true } : item
-        )
+    try {
+      setLoadingPayment(appointmentId);
+      const { data } = await axios.post(
+        `${backendURL}/api/user/payment`,
+        { appointmentId },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      await getDoctorsData();
-    } else {
-      toast.error(data.message);
-    }
-  } catch (error) {
-    toast.error(error.response?.data?.message || error.message);
-  } finally {
-    setLoadingPayment(null);
-  }
-};
+      if (data.success) {
+        toast.success(data.message);
+        setAppointments((prevAppointments) =>
+          prevAppointments.map((item) =>
+            item._id === appointmentId ? { ...item, payment: true } : item
+          )
+        );
 
+        await getDoctorsData();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message);
+    } finally {
+      setLoadingPayment(null);
+    }
+  };
 
   useEffect(() => {
     if (token) getUserAppointments();
   }, [token]);
 
+  useEffect(() => {
+    AOS.refresh();
+  }, [appointments]);
+
+  useEffect(() => {
+    AOS.init({ duration: 700, easing: "ease-out", once: false, offset: 100 });
+  }, []);
+
   return (
-    <div>
-      <p className="pb-3 mt-12 font-medium text-zinc-700 border-b">My Appointments</p>
-      <div>
-        {appointments.map((item) => (
+    <div data-aos="fade-up" className="px-4 sm:px-6">
+      <p className="pb-3 mt-12 font-medium text-zinc-700 border-b" data-aos="fade-down">
+        My Appointments
+      </p>
+      <div className="space-y-6 mt-6">
+        {appointments.map((item, idx) => (
           <div
             key={item._id}
             className="grid grid-cols-[1fr_2fr] gap-4 sm:flex sm:gap-6 py-2 border-b"
+            data-aos="fade-up"
+            data-aos-delay={idx * 80}
           >
             <div>
               <img
@@ -124,50 +136,46 @@ const MyAppointments = () => {
               </p>
             </div>
             <div className="flex flex-col gap-2 justify-center">
-  {item.cancelled ? (
-    <p className="text-red-500 px-4 py-2 border-2 border-red-500">
-      Appointment Cancelled
-    </p>
-  ) : (
-    <>
-      {/* Payment Status */}
-      {item.payment && (
-        <p className="text-green-500 px-4 py-2 border-2 border-green-500 text-center">
-          Paid
-        </p>
-      )}
+              {item.cancelled ? (
+                <p className="text-red-500 px-4 py-2 border-2 border-red-500">
+                  Appointment Cancelled
+                </p>
+              ) : (
+                <>
+                  {item.payment && (
+                    <p className="text-green-500 px-4 py-2 border-2 border-green-500 text-center">
+                      Paid
+                    </p>
+                  )}
 
-      {/* Pay Online button only if not paid */}
-      {!item.payment && (
-        <button
-          className="text-lg text-white bg-[rgb(95,111,255)] sm:min-w-48 py-3 px-4 rounded-md shadow-md hover:bg-[rgb(49,61,151)] transition-all duration-300 flex items-center justify-center"
-          onClick={() => handlePayment(item._id)}
-          disabled={loadingPayment === item._id}
-        >
-          {loadingPayment === item._id ? (
-            <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-5 h-5"></span>
-          ) : (
-            "Pay Online"
-          )}
-        </button>
-      )}
+                  {!item.payment && (
+                    <button
+                      className="text-lg text-white bg-[rgb(95,111,255)] sm:min-w-48 py-3 px-4 rounded-md shadow-md hover:bg-[rgb(49,61,151)] transition-all duration-300 flex items-center justify-center"
+                      onClick={() => handlePayment(item._id)}
+                      disabled={loadingPayment === item._id}
+                    >
+                      {loadingPayment === item._id ? (
+                        <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-5 h-5"></span>
+                      ) : (
+                        "Pay Online"
+                      )}
+                    </button>
+                  )}
 
-      {/* Cancel button always visible (even if paid) */}
-      <button
-        className="text-lg text-white bg-red-500 sm:min-w-48 py-3 px-4 rounded-md shadow-md hover:bg-red-700 transition-all duration-300 flex items-center justify-center"
-        onClick={() => cancelAppointment(item._id)}
-        disabled={loadingCancel === item._id}
-      >
-        {loadingCancel === item._id ? (
-          <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-5 h-5"></span>
-        ) : (
-          "Cancel Appointment"
-        )}
-      </button>
-    </>
-  )}
-</div>
-
+                  <button
+                    className="text-lg text-white bg-red-500 sm:min-w-48 py-3 px-4 rounded-md shadow-md hover:bg-red-700 transition-all duration-300 flex items-center justify-center"
+                    onClick={() => cancelAppointment(item._id)}
+                    disabled={loadingCancel === item._id}
+                  >
+                    {loadingCancel === item._id ? (
+                      <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-5 h-5"></span>
+                    ) : (
+                      "Cancel Appointment"
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         ))}
       </div>

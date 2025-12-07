@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { specialityData } from "./../assets/assets_frontend/assets";
 
 const SpecialityMenu = () => {
-  // Icon mapping for each speciality
   const specialityIcons = {
     "General Physician": "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
     "Gynecologist": "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z",
@@ -17,58 +16,55 @@ const SpecialityMenu = () => {
     "ENT Specialist": "M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z",
   };
 
-  const getIcon = (speciality) => {
-    return specialityIcons[speciality] || "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z";
-  };
+  const getIcon = (speciality) =>
+    specialityIcons[speciality] ||
+    "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z";
 
   return (
     <div
       id="speciality"
       className="flex flex-col items-center gap-6 py-20 px-4 text-gray-800 bg-white"
+      data-aos="fade-up"
     >
-      {/* Header Section */}
-      <div className="text-center max-w-3xl">
+      <div className="text-center max-w-3xl" data-aos="fade-down">
         <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-          Find By <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-800">Speciality</span>
+          Find By{" "}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-800">
+            Speciality
+          </span>
         </h1>
         <p className="text-gray-600 text-base sm:text-lg leading-relaxed">
-          Browse through our extensive list of trusted doctors across various specialities. 
+          Browse through our extensive list of trusted doctors across various specialities.
           Schedule your appointment hassle-free and get the care you deserve.
         </p>
       </div>
 
-      {/* Speciality Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 pt-8 w-full max-w-7xl">
+      <div
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 pt-8 w-full max-w-7xl"
+      >
         {specialityData.map((item, index) => (
           <Link
             onClick={() => scrollTo(0, 0)}
             to={`/doctors/${item.speciality}`}
             key={index}
             className="group relative bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-gray-100 hover:border-blue-500"
+            data-aos="fade-up"
+            data-aos-delay={index * 100}
           >
-            {/* Gradient Background on Hover */}
             <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-blue-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            
-            {/* Content */}
+
             <div className="relative p-6 flex flex-col items-center gap-4 transform group-hover:scale-105 transition-transform duration-300">
-              {/* Icon Container */}
               <div className="w-16 h-16 rounded-full bg-blue-100 group-hover:bg-white/20 flex items-center justify-center transition-all duration-300 shadow-lg group-hover:shadow-xl">
-                <svg 
-                  className="w-8 h-8 text-blue-600 group-hover:text-white transition-colors duration-300" 
-                  fill="none" 
-                  stroke="currentColor" 
+                <svg
+                  className="w-8 h-8 text-blue-600 group-hover:text-white transition-colors duration-300"
+                  fill="none"
+                  stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d={getIcon(item.speciality)} 
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={getIcon(item.speciality)} />
                 </svg>
               </div>
 
-              {/* Text */}
               <div className="text-center">
                 <h3 className="text-gray-900 group-hover:text-white font-bold text-base sm:text-lg transition-colors duration-300">
                   {item.speciality}
@@ -78,20 +74,9 @@ const SpecialityMenu = () => {
                 </p>
               </div>
 
-              {/* Arrow Icon */}
               <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
-                <svg 
-                  className="w-5 h-5 text-white" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M13 7l5 5m0 0l-5 5m5-5H6" 
-                  />
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </div>
             </div>
@@ -99,11 +84,8 @@ const SpecialityMenu = () => {
         ))}
       </div>
 
-      {/* Bottom CTA */}
-      <div className="mt-8 text-center">
-        <p className="text-gray-600 text-sm mb-4">
-          Can't find what you're looking for?
-        </p>
+      <div className="mt-8 text-center" data-aos="fade-up" data-aos-delay="200">
+        <p className="text-gray-600 text-sm mb-4">Can't find what you're looking for?</p>
         <Link
           to="/doctors"
           className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-full font-semibold hover:shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-105"
