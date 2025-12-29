@@ -24,22 +24,21 @@ const TopDoctors = () => {
 
   const [doctorCount, setDoctorCount] = useState(getDoctorCount());
 
-  // Resize handling
+  /* ---------- Resize handling ---------- */
   useEffect(() => {
     const handleResize = () => setDoctorCount(getDoctorCount());
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // 🔥 CRITICAL: refresh AOS after dynamic content changes
+  /* ---------- AOS refresh after data changes ---------- */
   useEffect(() => {
     AOS.refreshHard();
   }, [doctors, doctorCount]);
 
   return (
     <div className="flex flex-col items-center gap-6 my-20 text-gray-900 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-white">
-      
-      {/* Header */}
+      {/* HEADER */}
       <div className="text-center max-w-3xl" data-aos="fade-down">
         <h1 className="text-4xl sm:text-5xl font-bold mb-4">
           Top{" "}
@@ -52,28 +51,27 @@ const TopDoctors = () => {
         </p>
       </div>
 
-      {/* Grid */}
+      {/* GRID */}
       <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-8">
         {doctors.slice(0, doctorCount).map((item, index) => (
           <div
             key={item._id}
+            className="h-[420px]"              /* 🔥 CRITICAL FIX */
             data-aos="fade-up"
             data-aos-delay={Math.min(index * 50, 200)}
           >
             <FlipCard
+              className="h-full"             /* 🔥 REQUIRED */
               onClick={() => navigate(`/appointments/${item._id}`)}
-              className="hover:-translate-y-2 transition-transform duration-300"
               frontContent={
                 <div className="bg-white border-2 border-gray-200 rounded-2xl overflow-hidden flex flex-col h-full shadow-md hover:shadow-xl cursor-pointer">
-                  
-                  {/* FIXED HEIGHT + ASPECT RATIO (NO LAYOUT SHIFT) */}
-                  <div className="relative h-60 aspect-[3/4] bg-gray-100">
+                  {/* IMAGE */}
+                  <div className="relative h-60 bg-gray-100">
                     <img
                       src={item.image}
                       alt={item.name}
-                      className="absolute inset-0 w-full h-full object-cover object-top"
+                      className="w-full h-full object-cover object-top"
                     />
-
                     <div className="absolute top-3 right-3">
                       <span
                         className={`text-[10px] font-bold px-2 py-1 rounded text-white ${
@@ -85,13 +83,15 @@ const TopDoctors = () => {
                     </div>
                   </div>
 
-                  <div className="p-5 flex-1 flex flex-col">
+                  {/* CONTENT */}
+                  <div className="p-5 flex flex-col flex-1">
                     <h3 className="text-lg font-bold line-clamp-1">
                       {item.name}
                     </h3>
                     <p className="text-blue-600 text-sm font-semibold mb-3">
                       {item.speciality}
                     </p>
+
                     <div className="mt-auto pt-4 border-t flex justify-between text-sm text-gray-500">
                       <span>{formatExperience(item.experience)}</span>
                       <span className="font-bold text-gray-700">
@@ -102,14 +102,18 @@ const TopDoctors = () => {
                 </div>
               }
               backContent={
-                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 flex flex-col justify-center h-full text-center text-white shadow-xl">
-                  <h3 className="font-bold text-xl mb-1">{item.name}</h3>
-                  <p className="text-blue-100 text-sm mb-4">{item.degree}</p>
-                  <div className="text-sm space-y-2 mb-4">
-                    <p>Spec: {item.speciality}</p>
-                    <p>Fees: ${item.fees}</p>
-                    <p>{formatExperience(item.experience)}</p>
+                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 flex flex-col justify-between h-full text-center text-white shadow-xl">
+                  <div>
+                    <h3 className="font-bold text-xl mb-1">{item.name}</h3>
+                    <p className="text-blue-100 text-sm mb-4">{item.degree}</p>
+
+                    <div className="text-sm space-y-2 opacity-90">
+                      <p>Speciality: {item.speciality}</p>
+                      <p>Fees: ${item.fees}</p>
+                      <p>{formatExperience(item.experience)}</p>
+                    </div>
                   </div>
+
                   <button className="bg-white text-blue-700 px-6 py-2 rounded-lg font-bold text-sm">
                     Book Now
                   </button>
