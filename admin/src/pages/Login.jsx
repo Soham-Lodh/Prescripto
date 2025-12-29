@@ -113,7 +113,7 @@ const Login = () => {
           {loading ? "Logging in..." : "Login"}
         </button>
 
-        {state === "Admin" ? (
+        {/* {state === "Admin" ? (
           <p className="text-center text-sm text-gray-500">
             Doctor Login?{" "}
             <span
@@ -133,7 +133,7 @@ const Login = () => {
               Click Here
             </span>
           </p>
-        )}
+        )} */}
       </form>
     </div>
   );
