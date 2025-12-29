@@ -36,7 +36,7 @@ const Doctors = () => {
     return `Experience: ${num} ${num === 1 ? "year" : "years"}`;
   };
 
-  /* ---------------- CLEAR FILTERS ---------------- */
+  /* ---------- CLEAR FILTERS ---------- */
   const clearAllFilters = () => {
     setActiveSpec(null);
     setSearchTerm("");
@@ -44,7 +44,7 @@ const Doctors = () => {
     navigate("/doctors");
   };
 
-  /* ---------------- FILTER + SORT ---------------- */
+  /* ---------- FILTER + SORT ---------- */
   const applyFilterAndSort = () => {
     let filtered = [...doctors];
 
@@ -84,7 +84,7 @@ const Doctors = () => {
   }, [isLoading]);
 
   const SkeletonCard = () => (
-    <div className="bg-white border-2 border-gray-100 rounded-2xl overflow-hidden shadow-sm animate-pulse h-96">
+    <div className="bg-white border-2 border-gray-100 rounded-2xl shadow-sm animate-pulse h-[420px]">
       <div className="bg-gray-200 h-56"></div>
       <div className="p-4 space-y-3">
         <div className="h-6 bg-gray-200 rounded w-3/4"></div>
@@ -233,28 +233,69 @@ const Doctors = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filterDoc.map((doc) => (
-                <FlipCard
+              {filterDoc.map((doc, i) => (
+                <div
                   key={doc._id}
-                  onClick={() => navigate(`/appointments/${doc._id}`)}
-                  frontContent={
-                    <div className="bg-white border-2 rounded-2xl shadow-md">
-                      <img
-                        src={doc.image}
-                        alt={doc.name}
-                        className="h-60 w-full object-cover"
-                      />
-                      <div className="p-4">
-                        <h3 className="font-bold">{doc.name}</h3>
-                        <p className="text-blue-600 text-sm">{doc.speciality}</p>
-                        <div className="flex justify-between text-sm mt-3">
-                          <span>{formatExperience(doc.experience)}</span>
-                          <span>${doc.fees}</span>
+                  className="h-[420px]"   /* 🔥 FIXES OVERLAP */
+                  data-aos="fade-up"
+                  data-aos-delay={i * 50}
+                >
+                  <FlipCard
+                    className="h-full"
+                    onClick={() => navigate(`/appointments/${doc._id}`)}
+                    frontContent={
+                      <div className="bg-white border-2 border-gray-200 rounded-2xl overflow-hidden flex flex-col h-full shadow-md">
+                        <div className="relative h-60 bg-gray-100">
+                          <img
+                            src={doc.image}
+                            alt={doc.name}
+                            className="w-full h-full object-cover object-top"
+                          />
+                        </div>
+
+                        <div className="p-4 flex flex-col flex-1">
+                          <h3 className="font-bold text-lg line-clamp-1">
+                            {doc.name}
+                          </h3>
+                          <p className="text-blue-600 text-sm font-semibold mb-3">
+                            {doc.speciality}
+                          </p>
+
+                          <div className="mt-auto flex justify-between text-sm text-gray-600 border-t pt-4">
+                            <span>{formatExperience(doc.experience)}</span>
+                            <span className="font-bold">${doc.fees}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  }
-                />
+                    }
+                    backContent={
+                      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 flex flex-col justify-between h-full text-white shadow-xl">
+                        <div>
+                          <h3 className="text-xl font-bold mb-1">{doc.name}</h3>
+                          <p className="text-blue-100 text-sm mb-4">
+                            {doc.degree}
+                          </p>
+
+                          <div className="space-y-2 text-sm opacity-90">
+                            <p>Speciality: {doc.speciality}</p>
+                            <p>Fees: ${doc.fees}</p>
+                            <p>{formatExperience(doc.experience)}</p>
+                          </div>
+
+                          {doc.about && (
+                            <p className="mt-4 text-xs italic opacity-90 line-clamp-3">
+                              "{doc.about}"
+                            </p>
+                          )}
+                        </div>
+
+                        <button className="bg-white text-blue-700 py-2 rounded-lg font-bold text-sm">
+                          Book Now
+                        </button>
+                      </div>
+                    }
+                  />
+                </div>
               ))}
             </div>
           )}
