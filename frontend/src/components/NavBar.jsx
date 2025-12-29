@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets_frontend/assets";
 import { AppContext } from "../context/AppContext";
@@ -9,6 +9,9 @@ const NavBar = () => {
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const dropdownRef = useRef(null);
 
   /* ---------- SCROLL EFFECT ---------- */
   useEffect(() => {
@@ -17,20 +20,30 @@ const NavBar = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  /* ---------- CLOSE DROPDOWN ON OUTSIDE CLICK ---------- */
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   const logout = () => {
     localStorage.removeItem("token");
     setToken(false);
+    setShowDropdown(false);
     navigate("/");
   };
 
   return (
     <>
-      {/* TOP NAVBAR */}
+      {/* NAVBAR */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? "bg-white shadow-md border-b"
-            : "bg-white"
+          scrolled ? "bg-white shadow-md border-b" : "bg-white"
         }`}
       >
         <div className="flex items-center justify-between px-6 h-20 max-w-7xl mx-auto">
@@ -51,7 +64,8 @@ const NavBar = () => {
           </nav>
 
           {/* RIGHT SIDE */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 relative">
+            {/* DESKTOP AUTH */}
             {!token ? (
               <button
                 onClick={() => navigate("/login")}
@@ -60,15 +74,61 @@ const NavBar = () => {
                 Create Account
               </button>
             ) : (
-              <div className="hidden md:flex items-center gap-3">
+              <div
+                ref={dropdownRef}
+                className="hidden md:flex items-center gap-2 relative cursor-pointer"
+                onClick={() => setShowDropdown((p) => !p)}
+              >
                 <img
                   src={userData?.image}
                   alt="user"
                   className="w-10 h-10 rounded-full border object-cover"
                 />
-                <button onClick={logout} className="text-red-600 font-semibold">
-                  Logout
-                </button>
+
+                <img
+                  src={assets.dropdown_icon}
+                  alt="menu"
+                  className={`w-4 transition-transform ${
+                    showDropdown ? "rotate-180" : ""
+                  }`}
+                />
+
+                {showDropdown && (
+                  <div className="absolute right-0 top-14 w-56 bg-white rounded-xl shadow-xl border overflow-hidden z-50">
+                    <div className="bg-blue-600 text-white p-4">
+                      <p className="font-bold text-sm">{userData?.name}</p>
+                      <p className="text-xs">{userData?.email}</p>
+                    </div>
+
+                    <div className="p-2 text-gray-700">
+                      <p
+                        onClick={() => {
+                          navigate("/my-profile");
+                          setShowDropdown(false);
+                        }}
+                        className="px-4 py-3 hover:bg-blue-50 rounded cursor-pointer"
+                      >
+                        My Profile
+                      </p>
+                      <p
+                        onClick={() => {
+                          navigate("/my-appointments");
+                          setShowDropdown(false);
+                        }}
+                        className="px-4 py-3 hover:bg-blue-50 rounded cursor-pointer"
+                      >
+                        My Appointments
+                      </p>
+                      <hr className="my-2" />
+                      <p
+                        onClick={logout}
+                        className="px-4 py-3 text-red-600 hover:bg-red-50 rounded cursor-pointer"
+                      >
+                        Logout
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -90,10 +150,18 @@ const NavBar = () => {
       {mobileOpen && (
         <div className="fixed inset-0 z-40 bg-white md:hidden">
           <div className="flex flex-col items-center justify-center h-full gap-8 text-xl font-bold">
-            <NavLink to="/" onClick={() => setMobileOpen(false)}>Home</NavLink>
-            <NavLink to="/doctors" onClick={() => setMobileOpen(false)}>All Doctors</NavLink>
-            <NavLink to="/about" onClick={() => setMobileOpen(false)}>About</NavLink>
-            <NavLink to="/contact" onClick={() => setMobileOpen(false)}>Contact</NavLink>
+            <NavLink to="/" onClick={() => setMobileOpen(false)}>
+              Home
+            </NavLink>
+            <NavLink to="/doctors" onClick={() => setMobileOpen(false)}>
+              All Doctors
+            </NavLink>
+            <NavLink to="/about" onClick={() => setMobileOpen(false)}>
+              About
+            </NavLink>
+            <NavLink to="/contact" onClick={() => setMobileOpen(false)}>
+              Contact
+            </NavLink>
 
             <hr className="w-1/2 border-gray-300" />
 
@@ -107,10 +175,16 @@ const NavBar = () => {
               </NavLink>
             ) : (
               <>
-                <NavLink to="/my-profile" onClick={() => setMobileOpen(false)}>
+                <NavLink
+                  to="/my-profile"
+                  onClick={() => setMobileOpen(false)}
+                >
                   My Profile
                 </NavLink>
-                <NavLink to="/my-appointments" onClick={() => setMobileOpen(false)}>
+                <NavLink
+                  to="/my-appointments"
+                  onClick={() => setMobileOpen(false)}
+                >
                   My Appointments
                 </NavLink>
                 <button onClick={logout} className="text-red-600">
