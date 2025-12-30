@@ -38,6 +38,14 @@ const NavBar = () => {
     navigate("/");
   };
 
+  const navLinkClass = ({ isActive }) =>
+    isActive
+      ? "text-blue-600 border-b-2 border-blue-600 pb-1"
+      : "hover:text-blue-600";
+
+  const mobileNavLinkClass = ({ isActive }) =>
+    isActive ? "text-blue-600" : "";
+
   return (
     <>
       {/* NAVBAR */}
@@ -57,15 +65,22 @@ const NavBar = () => {
 
           {/* DESKTOP LINKS */}
           <nav className="hidden md:flex gap-8 font-medium text-gray-800">
-            <NavLink to="/">HOME</NavLink>
-            <NavLink to="/doctors">ALL DOCTORS</NavLink>
-            <NavLink to="/about">ABOUT</NavLink>
-            <NavLink to="/contact">CONTACT</NavLink>
+            <NavLink to="/" className={navLinkClass}>
+              HOME
+            </NavLink>
+            <NavLink to="/doctors" className={navLinkClass}>
+              ALL DOCTORS
+            </NavLink>
+            <NavLink to="/about" className={navLinkClass}>
+              ABOUT
+            </NavLink>
+            <NavLink to="/contact" className={navLinkClass}>
+              CONTACT
+            </NavLink>
           </nav>
 
           {/* RIGHT SIDE */}
           <div className="flex items-center gap-4 relative">
-            {/* DESKTOP AUTH */}
             {!token ? (
               <button
                 onClick={() => navigate("/login")}
@@ -146,20 +161,36 @@ const NavBar = () => {
       {/* SPACER */}
       <div className="h-20" />
 
-      {/* FULL SCREEN MOBILE SIDEBAR */}
+      {/* MOBILE FULLSCREEN MENU */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 bg-white md:hidden">
           <div className="flex flex-col items-center justify-center h-full gap-8 text-xl font-bold">
-            <NavLink to="/" onClick={() => setMobileOpen(false)}>
+            <NavLink
+              to="/"
+              onClick={() => setMobileOpen(false)}
+              className={mobileNavLinkClass}
+            >
               Home
             </NavLink>
-            <NavLink to="/doctors" onClick={() => setMobileOpen(false)}>
+            <NavLink
+              to="/doctors"
+              onClick={() => setMobileOpen(false)}
+              className={mobileNavLinkClass}
+            >
               All Doctors
             </NavLink>
-            <NavLink to="/about" onClick={() => setMobileOpen(false)}>
+            <NavLink
+              to="/about"
+              onClick={() => setMobileOpen(false)}
+              className={mobileNavLinkClass}
+            >
               About
             </NavLink>
-            <NavLink to="/contact" onClick={() => setMobileOpen(false)}>
+            <NavLink
+              to="/contact"
+              onClick={() => setMobileOpen(false)}
+              className={mobileNavLinkClass}
+            >
               Contact
             </NavLink>
 
@@ -178,12 +209,14 @@ const NavBar = () => {
                 <NavLink
                   to="/my-profile"
                   onClick={() => setMobileOpen(false)}
+                  className={mobileNavLinkClass}
                 >
                   My Profile
                 </NavLink>
                 <NavLink
                   to="/my-appointments"
                   onClick={() => setMobileOpen(false)}
+                  className={mobileNavLinkClass}
                 >
                   My Appointments
                 </NavLink>
