@@ -43,37 +43,28 @@ const Testimonials = () => {
     arrows: false,
     infinite: true,
     speed: 600,
-    slidesToScroll: 1,
     autoplay: true,
     autoplaySpeed: 4000,
     pauseOnHover: true,
     cssEase: "ease-in-out",
-
-    // ✅ FIXED RESPONSIVE CONFIG
     slidesToShow: 3,
+    slidesToScroll: 1,
+
     responsive: [
       {
-        breakpoint: 1280,
-        settings: { slidesToShow: 3 },
-      },
-      {
         breakpoint: 1024,
-        settings: { slidesToShow: 2 },
-      },
-      {
-        breakpoint: 768,
         settings: {
-          slidesToShow: 1,
-          centerMode: true,
-          centerPadding: "40px",
+          slidesToShow: 2,
+          slidesToScroll: 1,
+          centerMode: false,
         },
       },
       {
-        breakpoint: 480,
+        breakpoint: 640,
         settings: {
           slidesToShow: 1,
-          centerMode: true,
-          centerPadding: "20px",
+          slidesToScroll: 1,
+          centerMode: false,   // ← KEY FIX: centerMode was causing partial card bleed
         },
       },
     ],
@@ -103,9 +94,7 @@ const Testimonials = () => {
       <div className="max-w-4xl mx-auto text-center mb-10 sm:mb-12 px-4">
         <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-sm font-medium mb-4">
           <Star className="w-4 h-4 fill-blue-600" />
-          <span className="text-base sm:text-lg">
-            What our users say
-          </span>
+          <span className="text-base sm:text-lg">What our users say</span>
         </div>
 
         <h2 className="text-2xl sm:text-4xl font-bold text-blue-700 mt-4 mb-3">
@@ -118,53 +107,56 @@ const Testimonials = () => {
       </div>
 
       {/* SLIDER */}
+      {/*
+        CRITICAL: The outer wrapper must NOT have overflow-hidden or it clips slick's
+        internal translate. Give it a controlled px so cards don't touch screen edges.
+      */}
       <div className="max-w-7xl mx-auto px-4 pb-16">
         <Slider {...settings}>
           {TestimonialData.map((t) => (
-            <div key={t.id} className="px-2 sm:px-3">
-              <div className="h-full flex">
-                <div className="bg-white w-full rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-5 sm:p-8 border border-blue-100 hover:border-blue-500 relative overflow-hidden group">
-                  
-                  {/* background circle */}
-                  <div className="absolute -top-6 -right-6 w-20 h-20 bg-blue-50 rounded-full opacity-40 group-hover:scale-150 transition-transform duration-500" />
+            <div key={t.id} className="px-2 sm:px-3 h-full">
+              <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-5 sm:p-8 border border-blue-100 hover:border-blue-500 relative overflow-hidden group h-full">
 
-                  <div className="relative z-10 flex flex-col h-full">
-                    <Quote className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600 mb-4 opacity-60" />
+                {/* Background circle decoration */}
+                <div className="absolute -top-6 -right-6 w-20 h-20 bg-blue-50 rounded-full opacity-40 group-hover:scale-150 transition-transform duration-500" />
 
-                    {/* TEXT */}
-                    <p className="text-gray-700 text-sm sm:text-base leading-relaxed mb-6 break-words">
-                      "{t.text}"
-                    </p>
+                <div className="relative z-10 flex flex-col h-full">
+                  <Quote className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600 mb-4 opacity-60 flex-shrink-0" />
 
-                    {/* FOOTER */}
-                    <div className="flex items-center gap-3 sm:gap-4 mt-auto pt-4 border-t border-blue-100">
-                      <img
-                        src={t.img}
-                        alt={t.name}
-                        className="w-10 h-10 sm:w-14 sm:h-14 rounded-full object-cover ring-2 ring-blue-600"
-                      />
+                  {/* TEXT — flex-1 pushes footer to bottom regardless of text length */}
+                  <p className="text-gray-700 text-sm sm:text-base leading-relaxed mb-6 flex-1">
+                    "{t.text}"
+                  </p>
 
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-blue-800 text-sm sm:text-lg">
-                          {t.name}
-                        </h3>
-                        <p className="text-xs sm:text-sm text-gray-500">
-                          {t.role}
-                        </p>
-                      </div>
+                  {/* FOOTER */}
+                  <div className="flex items-center gap-3 sm:gap-4 pt-4 border-t border-blue-100">
+                    <img
+                      src={t.img}
+                      alt={t.name}
+                      className="w-10 h-10 sm:w-14 sm:h-14 rounded-full object-cover ring-2 ring-blue-600 flex-shrink-0"
+                    />
 
-                      <div className="flex gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-3 h-3 sm:w-4 sm:h-4 ${
-                              i < t.rating
-                                ? "text-blue-600 fill-blue-600"
-                                : "text-gray-300"
-                            }`}
-                          />
-                        ))}
-                      </div>
+                    {/* min-w-0 prevents text overflow from blowing out the flex container */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-blue-800 text-sm sm:text-lg truncate">
+                        {t.name}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-gray-500 truncate">
+                        {t.role}
+                      </p>
+                    </div>
+
+                    <div className="flex gap-0.5 flex-shrink-0">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-3 h-3 sm:w-4 sm:h-4 ${
+                            i < t.rating
+                              ? "text-blue-600 fill-blue-600"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -178,18 +170,27 @@ const Testimonials = () => {
       <div className="text-center mt-6 sm:mt-8">
         <p className="text-gray-600 text-base">
           Over{" "}
-          <span className="font-bold text-blue-600 text-lg">
-            10,000+
-          </span>{" "}
+          <span className="font-bold text-blue-600 text-lg">10,000+</span>{" "}
           happy patients
         </p>
       </div>
 
-      {/* CRITICAL FIX FOR SLICK LAYOUT */}
+      {/* SLICK LAYOUT FIXES */}
       <style>{`
+        /* Make slick track items stretch to equal height */
+        .slick-track {
+          display: flex !important;
+        }
+        .slick-slide {
+          height: inherit !important;
+        }
         .slick-slide > div {
-          display: flex;
           height: 100%;
+        }
+
+        /* Prevent any partial card bleed on mobile */
+        .slick-list {
+          overflow: hidden;
         }
       `}</style>
     </div>
