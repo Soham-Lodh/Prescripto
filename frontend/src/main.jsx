@@ -5,16 +5,20 @@ import "./index.css";
 import App from "./App.jsx";
 import { BrowserRouter } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
+import { Analytics } from "@vercel/analytics/react"; // add this
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import "aos/dist/aos.css";
+import AnalyticsTracker from "./components/AnalyticsTracker.jsx"
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
+    <AnalyticsTracker />
     <HelmetProvider>
       <AppContextProvider>
         <App />
       </AppContextProvider>
     </HelmetProvider>
+    <Analytics />
   </BrowserRouter>
 );
