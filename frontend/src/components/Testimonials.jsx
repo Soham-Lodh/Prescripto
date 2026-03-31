@@ -43,33 +43,54 @@ const Testimonials = () => {
     arrows: false,
     infinite: true,
     speed: 600,
-    slidesToShow: 3,
     slidesToScroll: 1,
     autoplay: true,
     autoplaySpeed: 4000,
-    cssEase: "ease-in-out",
     pauseOnHover: true,
+    cssEase: "ease-in-out",
+
+    // ✅ FIXED RESPONSIVE CONFIG
+    slidesToShow: 3,
     responsive: [
+      {
+        breakpoint: 1280,
+        settings: { slidesToShow: 3 },
+      },
       {
         breakpoint: 1024,
         settings: { slidesToShow: 2 },
       },
       {
-        breakpoint: 640,
-        settings: { slidesToShow: 1 },
+        breakpoint: 768,
+        settings: {
+          slidesToShow: 1,
+          centerMode: true,
+          centerPadding: "40px",
+        },
+      },
+      {
+        breakpoint: 480,
+        settings: {
+          slidesToShow: 1,
+          centerMode: true,
+          centerPadding: "20px",
+        },
       },
     ],
-    customPaging: (i) => (
+
+    customPaging: () => (
       <div className="w-3 h-3 mx-1 bg-gray-300 rounded-full transition-all duration-300" />
     ),
-    dotsClass: "slick-dots !bottom-[-40px] custom-dots",
+
+    dotsClass: "slick-dots !bottom-[-30px] custom-dots",
+
     appendDots: (dots) => (
       <div>
-        <ul style={{ margin: "0px" }}> {dots} </ul>
+        <ul className="m-0 flex justify-center">{dots}</ul>
         <style>{`
           .custom-dots li.slick-active div {
             background-color: #2563eb !important;
-            transform: scale(1.3);
+            transform: scale(1.2);
           }
         `}</style>
       </div>
@@ -77,62 +98,73 @@ const Testimonials = () => {
   };
 
   return (
-    <div className="py-16 bg-white">
-      <div className="max-w-4xl mx-auto text-center mb-12 px-4">
+    <div className="py-12 sm:py-16 bg-white">
+      {/* HEADER */}
+      <div className="max-w-4xl mx-auto text-center mb-10 sm:mb-12 px-4">
         <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-sm font-medium mb-4">
           <Star className="w-4 h-4 fill-blue-600" />
-          <span className="text-lg">What our users say</span>
+          <span className="text-base sm:text-lg">
+            What our users say
+          </span>
         </div>
-        <h2 className="text-4xl font-bold text-blue-700 mt-4 mb-3">
+
+        <h2 className="text-2xl sm:text-4xl font-bold text-blue-700 mt-4 mb-3">
           Trusted by Thousands
         </h2>
-        <p className="text-gray-600 max-w-2xl mx-auto">
+
+        <p className="text-gray-600 text-sm sm:text-base max-w-2xl mx-auto">
           Real feedback from people using Prescripto to manage their healthcare journey
         </p>
       </div>
-      
+
+      {/* SLIDER */}
       <div className="max-w-7xl mx-auto px-4 pb-16">
         <Slider {...settings}>
           {TestimonialData.map((t) => (
-            <div key={t.id} className="px-3">
-              <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 h-full border-2 border-blue-100 hover:border-blue-600 relative overflow-hidden group">
-                <div className="absolute -top-4 -right-4 w-24 h-24 bg-blue-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500" />
-                
-                <div className="relative z-10">
-                  <Quote className="w-10 h-10 text-blue-600 mb-4 opacity-60" />
+            <div key={t.id} className="px-2 sm:px-3">
+              <div className="h-full flex">
+                <div className="bg-white w-full rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-5 sm:p-8 border border-blue-100 hover:border-blue-500 relative overflow-hidden group">
                   
-                  <p className="text-gray-700 text-lg leading-relaxed mb-6 min-h-[80px]">
-                    "{t.text}"
-                  </p>
-                  
-                  <div className="flex items-center gap-4 pt-4 border-t border-blue-100">
-                    <div className="relative">
-                      <img 
-                        src={t.img} 
-                        alt={t.name} 
-                        className="w-14 h-14 rounded-full object-cover ring-2 ring-blue-600"
+                  {/* background circle */}
+                  <div className="absolute -top-6 -right-6 w-20 h-20 bg-blue-50 rounded-full opacity-40 group-hover:scale-150 transition-transform duration-500" />
+
+                  <div className="relative z-10 flex flex-col h-full">
+                    <Quote className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600 mb-4 opacity-60" />
+
+                    {/* TEXT */}
+                    <p className="text-gray-700 text-sm sm:text-base leading-relaxed mb-6 break-words">
+                      "{t.text}"
+                    </p>
+
+                    {/* FOOTER */}
+                    <div className="flex items-center gap-3 sm:gap-4 mt-auto pt-4 border-t border-blue-100">
+                      <img
+                        src={t.img}
+                        alt={t.name}
+                        className="w-10 h-10 sm:w-14 sm:h-14 rounded-full object-cover ring-2 ring-blue-600"
                       />
-                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-600 rounded-full border-2 border-white" />
-                    </div>
-                    
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-blue-800 text-lg">
-                        {t.name}
-                      </h3>
-                      <p className="text-sm text-gray-500">{t.role}</p>
-                    </div>
-                    
-                    <div className="flex gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-4 h-4 ${
-                            i < t.rating
-                              ? "text-blue-600 fill-blue-600"
-                              : "text-gray-300"
-                          }`}
-                        />
-                      ))}
+
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-blue-800 text-sm sm:text-lg">
+                          {t.name}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-gray-500">
+                          {t.role}
+                        </p>
+                      </div>
+
+                      <div className="flex gap-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-3 h-3 sm:w-4 sm:h-4 ${
+                              i < t.rating
+                                ? "text-blue-600 fill-blue-600"
+                                : "text-gray-300"
+                            }`}
+                          />
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -141,12 +173,25 @@ const Testimonials = () => {
           ))}
         </Slider>
       </div>
-      
-      <div className="text-center mt-8">
-        <p className="text-gray-600 text-base text-xl">
-          Over <span className="font-bold text-blue-600 text-lg">10,000+</span> happy patients
+
+      {/* FOOTER */}
+      <div className="text-center mt-6 sm:mt-8">
+        <p className="text-gray-600 text-base">
+          Over{" "}
+          <span className="font-bold text-blue-600 text-lg">
+            10,000+
+          </span>{" "}
+          happy patients
         </p>
       </div>
+
+      {/* CRITICAL FIX FOR SLICK LAYOUT */}
+      <style>{`
+        .slick-slide > div {
+          display: flex;
+          height: 100%;
+        }
+      `}</style>
     </div>
   );
 };
