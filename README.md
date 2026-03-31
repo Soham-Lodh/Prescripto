@@ -5,6 +5,8 @@ Prescripto is a **MERN (MongoDB, Express, React, Node.js) web application** for 
 
 ### Deployed Link - https://prescripto-o5lf.vercel.app/
 
+### Deployed Admin Panel - https://prescripto-admin-lyart.vercel.app/
+
 ---
 
 ## Features
