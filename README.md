@@ -36,7 +36,6 @@ Prescripto is a **MERN (MongoDB, Express, React, Node.js) web application** for 
 - **Database:** MongoDB
 - **Authentication:** JWT
 - **File Storage:** Cloudinary
-- **Payments:** Razorpay
 - **Other:** Multer, Bcrypt
 
 ---
