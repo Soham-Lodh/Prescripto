@@ -31,7 +31,7 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174", "https://prescripto-o6es.onrender.com", "https://prescripto-o5lf.vercel.app"],
+    origin: ["http://localhost:5173", "http://localhost:5174", "https://prescripto-admin-lyart.vercel.app", "https://prescripto-o5lf.vercel.app"],
     credentials: true,
   })
 );
