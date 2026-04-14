@@ -36,7 +36,6 @@ const Doctors = () => {
     return `Experience: ${num} ${num === 1 ? "year" : "years"}`;
   };
 
-  /* ---------- CLEAR FILTERS ---------- */
   const clearAllFilters = () => {
     setActiveSpec(null);
     setSearchTerm("");
@@ -44,7 +43,6 @@ const Doctors = () => {
     navigate("/doctors");
   };
 
-  /* ---------- FILTER + SORT ---------- */
   const applyFilterAndSort = () => {
     let filtered = [...doctors];
 
@@ -67,12 +65,15 @@ const Doctors = () => {
     if (sortOrder === "high-low") filtered.sort((a, b) => b.fees - a.fees);
 
     setFilterDoc(filtered);
-    setTimeout(() => setIsLoading(false), 300);
   };
 
   useEffect(() => {
     setIsLoading(true);
-    applyFilterAndSort();
+
+    if (doctors.length > 0) {
+      applyFilterAndSort();
+      setIsLoading(false);
+    }
   }, [doctors, speciality, sortOrder, searchTerm]);
 
   useEffect(() => {
@@ -84,23 +85,31 @@ const Doctors = () => {
   }, [isLoading]);
 
   const SkeletonCard = () => (
-    <div className="bg-white border-2 border-gray-100 rounded-2xl shadow-sm animate-pulse h-[420px]">
-      <div className="bg-gray-200 h-56"></div>
-      <div className="p-4 space-y-3">
-        <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-        <div className="h-4 bg-gray-200 rounded w-full"></div>
+    <div className="bg-white border-2 border-gray-200 rounded-2xl overflow-hidden flex flex-col h-[420px] shadow-md relative">
+      <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-gray-100 to-transparent"></div>
+
+      <div className="h-60 bg-gray-200"></div>
+
+      <div className="p-4 flex flex-col flex-1">
+        <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
+        <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+
+        <div className="flex-1"></div>
+
+        <div className="flex justify-between items-center border-t pt-4">
+          <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-5 bg-gray-200 rounded w-1/4"></div>
+        </div>
       </div>
     </div>
   );
 
   return (
-    <div className="px-3 sm:px-6 py-8 max-w-7xl mx-auto">
+    <div className="bg-white px-3 sm:px-6 py-8 max-w-7xl mx-auto">
       <Helmet>
         <title>{speciality ? `${speciality}s` : "All Doctors"} | Prescripto</title>
       </Helmet>
 
-      {/* HEADER */}
       <div className="text-center mb-8" data-aos="fade-down">
         <h1 className="text-3xl sm:text-4xl font-bold mb-3">
           Our Specialized Doctors
@@ -110,18 +119,16 @@ const Doctors = () => {
         </p>
       </div>
 
-      {/* SEARCH */}
       <div className="flex justify-center mb-10" data-aos="fade-up">
         <input
           type="text"
           placeholder="Search doctors by name..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full max-w-lg px-5 py-3 rounded-full border-2 border-gray-200 focus:border-blue-500"
+          className="w-full max-w-lg px-5 py-3 rounded-full border-2 border-gray-200 focus:border-blue-500 outline-none"
         />
       </div>
 
-      {/* SORT + MOBILE FILTER */}
       <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
         <button
           onClick={() => setShowFilter(!showFilter)}
@@ -141,51 +148,10 @@ const Doctors = () => {
         </select>
       </div>
 
-      {/* MOBILE FILTER */}
-      {showFilter && (
-        <div className="sm:hidden bg-white p-4 rounded-xl shadow-md mb-6">
-          <div className="grid grid-cols-2 gap-2">
-            {doctorTypes.map((spec) => (
-              <button
-                key={spec}
-                onClick={() => {
-                  navigate(`/doctors/${spec}`);
-                  setShowFilter(false);
-                }}
-                className="border-2 rounded-lg py-2 text-sm"
-              >
-                {spec}
-              </button>
-            ))}
-            <button
-              onClick={() => {
-                clearAllFilters();
-                setShowFilter(false);
-              }}
-              className="col-span-2 text-red-600 text-sm underline"
-            >
-              Clear all filters
-            </button>
-          </div>
-        </div>
-      )}
-
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* SIDEBAR */}
         <div className="hidden sm:block w-64">
           <div className="bg-white p-6 rounded-xl shadow-md sticky top-4">
-            <div className="flex justify-between mb-4">
-              <h3 className="font-bold">Specialities</h3>
-              {(activeSpec || searchTerm || sortOrder) && (
-                <button
-                  onClick={clearAllFilters}
-                  className="text-xs text-red-600 underline"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-
+            <h3 className="font-bold mb-4">Specialities</h3>
             <div className="space-y-2">
               {doctorTypes.map((spec) => (
                 <button
@@ -201,24 +167,14 @@ const Doctors = () => {
                 </button>
               ))}
             </div>
-
-            {(activeSpec || searchTerm || sortOrder) && (
-              <button
-                onClick={clearAllFilters}
-                className="mt-4 w-full border-2 border-dashed rounded-lg py-2 text-sm text-gray-600 hover:text-red-600"
-              >
-                Remove all filters
-              </button>
-            )}
           </div>
         </div>
 
-        {/* CONTENT */}
         <div className="flex-1">
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((n) => (
-                <SkeletonCard key={n} />
+              {[...Array(6)].map((_, i) => (
+                <SkeletonCard key={i} />
               ))}
             </div>
           ) : filterDoc.length === 0 ? (
@@ -236,7 +192,7 @@ const Doctors = () => {
               {filterDoc.map((doc, i) => (
                 <div
                   key={doc._id}
-                  className="h-[420px]"   /* 🔥 FIXES OVERLAP */
+                  className="h-[420px]"
                   data-aos="fade-up"
                   data-aos-delay={i * 50}
                 >
@@ -301,6 +257,12 @@ const Doctors = () => {
           )}
         </div>
       </div>
+
+      <style>
+        {`@keyframes shimmer {
+          100% { transform: translateX(100%); }
+        }`}
+      </style>
     </div>
   );
 };
