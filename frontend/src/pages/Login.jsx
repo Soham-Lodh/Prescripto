@@ -59,15 +59,15 @@ const Login = () => {
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
 
         :root {
-          --blue-600: #185FA5;
-          --blue-500: #378ADD;
-          --blue-400: #5B9FE5;
-          --blue-300: #7DBAF0;
-          --blue-200: #85B7EB;
-          --blue-100: #B5D4F4;
-          --blue-50:  #E6F1FB;
-          --text-dark: #1a2b3c;
-          --text-mid:  #4a6380;
+          --blue-600: #5F6FFF;
+          --blue-500: #5F6FFF;
+          --blue-400: #7B8CFF;
+          --blue-300: #9AADFF;
+          --blue-200: #C4CEFF;
+          --blue-100: #E0E5FF;
+          --blue-50:  #F3F5FF;
+          --text-dark: #1a1a2e;
+          --text-mid:  #4a5568;
           --text-soft: #8899a6;
         }
 
@@ -470,7 +470,7 @@ const Login = () => {
                   <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
               </div>
-              <span className="brand-name">MediBook</span>
+              <span className="brand-name">Prescripto</span>
             </div>
 
             <div className="panel-headline">

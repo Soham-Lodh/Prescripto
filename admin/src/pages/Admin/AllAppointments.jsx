@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+﻿import React, { useContext, useEffect, useState } from "react";
 import { AdminContext } from "../../context/AdminContext";
 import { AppContext } from "../../context/AppContext";
 
@@ -71,7 +71,7 @@ const AllAppointments = () => {
           <div
             className="
               hidden sm:grid
-              grid-cols-[60px_1.7fr_2.8fr_2.6fr_200px]
+              grid-cols-[60px_1.7fr_2.8fr_2.6fr_1.2fr_150px]
               py-5 px-8
               bg-gradient-to-r from-indigo-50 to-purple-50
               border-b border-indigo-100
@@ -88,7 +88,8 @@ const AllAppointments = () => {
               <div className="w-11 h-11"></div>
               <p>Doctor</p>
             </div>
-            <div className="pl-32"><p>Actions</p></div>
+            <div><p>Status</p></div>
+            <div className="pl-12"><p>Actions</p></div>
           </div>
 
           {/* BODY */}
@@ -102,7 +103,7 @@ const AllAppointments = () => {
                 <div
                   key={index}
                   className="
-                    sm:grid sm:grid-cols-[60px_1.7fr_2.8fr_2.6fr_200px]
+                    sm:grid sm:grid-cols-[60px_1.7fr_2.8fr_2.6fr_1.2fr_150px]
                     flex flex-wrap sm:flex-nowrap gap-x-6
                     items-center py-6 px-8 border-b border-gray-100
                     hover:bg-indigo-50/40 transition-all
@@ -153,11 +154,28 @@ const AllAppointments = () => {
                     </div>
                   </div>
 
+                  {/* Status */}
+                  <div>
+                    {item.cancelled ? (
+                      <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
+                        Cancelled
+                      </span>
+                    ) : item.isCompleted ? (
+                      <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                        Completed
+                      </span>
+                    ) : (
+                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                        Scheduled
+                      </span>
+                    )}
+                  </div>
+
                   {/* Actions */}
                   <div className="flex justify-end pl-8">
-                    {item.cancelled ? (
-                      <span className="px-4 py-2 bg-red-100 text-red-600 rounded-lg text-sm font-semibold">
-                        Cancelled
+                    {item.cancelled || item.isCompleted ? (
+                      <span className="px-3 py-1 text-xs text-gray-500 font-semibold">
+                        —
                       </span>
                     ) : (
                       <button

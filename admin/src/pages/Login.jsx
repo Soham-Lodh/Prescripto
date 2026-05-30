@@ -113,27 +113,34 @@ const Login = () => {
           {loading ? "Logging in..." : "Login"}
         </button>
 
-        {/* {state === "Admin" ? (
-          <p className="text-center text-sm text-gray-500">
-            Doctor Login?{" "}
-            <span
-              className="text-[rgb(95,111,255)] font-medium cursor-pointer hover:underline"
-              onClick={() => setState("Doctor")}
-            >
-              Click Here
-            </span>
-          </p>
-        ) : (
-          <p className="text-center text-sm text-gray-500">
-            Admin Login?{" "}
-            <span
-              className="text-[rgb(95,111,255)] font-medium cursor-pointer hover:underline"
+        {/* Role Toggle */}
+        <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3 border border-gray-200">
+          <span className="text-sm font-medium text-gray-600">Login as:</span>
+          <div className="flex gap-2">
+            <button
+              type="button"
               onClick={() => setState("Admin")}
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                state === "Admin"
+                  ? "bg-[rgb(95,111,255)] text-white shadow-md"
+                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+              }`}
             >
-              Click Here
-            </span>
-          </p>
-        )} */}
+              Admin
+            </button>
+            <button
+              type="button"
+              onClick={() => setState("Doctor")}
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                state === "Doctor"
+                  ? "bg-[rgb(95,111,255)] text-white shadow-md"
+                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+              }`}
+            >
+              Doctor
+            </button>
+          </div>
+        </div>
       </form>
     </div>
   );

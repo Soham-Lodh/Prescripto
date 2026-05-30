@@ -2,16 +2,24 @@ import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets";
 import { AdminContext } from "../context/AdminContext";
+import { DoctorContext } from "../context/DoctorContext";
 import { toast } from "react-toastify";
 
 const NavBar = () => {
   const navigate = useNavigate();
   const { aToken, setAToken } = useContext(AdminContext);
+  const { dToken, setDToken } = useContext(DoctorContext);
   const [isHovered, setIsHovered] = useState(false);
 
   const logout = () => {
-    aToken && setAToken("");
-    aToken && localStorage.removeItem("aToken");
+    if (aToken) {
+      setAToken("");
+      localStorage.removeItem("aToken");
+    }
+    if (dToken) {
+      setDToken("");
+      localStorage.removeItem("dToken");
+    }
     toast.success("Logged out successfully");
     navigate("/");
   };
@@ -36,7 +44,7 @@ const NavBar = () => {
           <div className="relative">
             <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 border border-indigo-200/50 shadow-sm">
               <span className="w-2 h-2 bg-indigo-500 rounded-full mr-2 animate-pulse"></span>
-              {aToken ? "Admin" : "Doctor"}
+              {aToken ? "Admin" : dToken ? "Doctor" : "User"}
             </span>
           </div>
         </div>

@@ -6,6 +6,7 @@ import contactModel from "../models/contactModel.js";
 import jwt from "jsonwebtoken";
 import validator from "validator";
 import { v2 as cloudinary } from "cloudinary";
+import { checkAndCompleteAppointments } from "../helpers/appointmentHelper.js";
 
 // Helper function for strict sanitization
 const sanitizeInput = (input) => {
@@ -225,7 +226,11 @@ export const bookAppointment = async (req, res) => {
 export const listAppointments = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const appointments = await appointmentModel.find({ userId }).sort({ date: -1 });
+    let appointments = await appointmentModel.find({ userId }).sort({ date: -1 });
+
+    // Auto-complete appointments whose time has passed
+    appointments = await checkAndCompleteAppointments(appointments);
+
     return res.status(200).json({ success: true, appointments });
   } catch (error) {
     console.error("Fetch appointments error:", error);

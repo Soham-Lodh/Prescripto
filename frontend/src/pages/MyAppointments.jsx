@@ -17,12 +17,61 @@ const MyAppointments = () => {
     return `${day} ${monthNames[parseInt(month, 10) - 1]} ${year}`;
   };
 
+  const getAppointmentStatus = (appointment) => {
+    if (appointment.cancelled) {
+      return { 
+        status: "Cancelled", 
+        textColor: "text-red-600", 
+        bgColor: "bg-red-50", 
+        borderColor: "border-red-500" 
+      };
+    }
+    if (appointment.isCompleted) {
+      return { 
+        status: "Completed", 
+        textColor: "text-green-600", 
+        bgColor: "bg-green-50", 
+        borderColor: "border-green-500" 
+      };
+    }
+    return { 
+      status: "Scheduled", 
+      textColor: "text-blue-600", 
+      bgColor: "bg-blue-50", 
+      borderColor: "border-blue-500" 
+    };
+  };
+
+  const parseAppointmentDateTime = (slotDate, slotTime) => {
+    const [day, month, year] = slotDate.split("-").map(Number);
+    const [hours, minutes] = slotTime.split(":").map(Number);
+    return new Date(year, month - 1, day, hours, minutes, 0);
+  };
+
+  const isAppointmentPassed = (slotDate, slotTime) => {
+    const appointmentDateTime = parseAppointmentDateTime(slotDate, slotTime);
+    return appointmentDateTime < new Date();
+  };
+
   const getUserAppointments = async () => {
     try {
       const { data } = await axios.get(`${backendURL}/api/user/list-appointments`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (data.success) setAppointments(data.appointments);
+      if (data.success) {
+        let appointments = data.appointments;
+        
+        // Check and auto-complete appointments if time has passed
+        const now = new Date();
+        appointments = appointments.map((apt) => {
+          if (!apt.cancelled && !apt.isCompleted && isAppointmentPassed(apt.slotDate, apt.slotTime)) {
+            return { ...apt, isCompleted: true };
+          }
+          return apt;
+        });
+        
+        setAppointments(appointments);
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to fetch appointments");
     }
@@ -134,47 +183,71 @@ const MyAppointments = () => {
                     })()
                   : "—"}
               </p>
+
+              {item.isCompleted && (
+                <p className="text-green-600 text-sm font-medium mt-2">
+                  ✓ Completed - Appointment attended
+                </p>
+              )}
             </div>
             <div className="flex flex-col gap-2 justify-center">
-              {item.cancelled ? (
-                <p className="text-red-500 px-4 py-2 border-2 border-red-500">
-                  Appointment Cancelled
-                </p>
-              ) : (
-                <>
-                  {item.payment && (
-                    <p className="text-green-500 px-4 py-2 border-2 border-green-500 text-center">
-                      Paid
-                    </p>
-                  )}
+              {(() => {
+                const statusInfo = getAppointmentStatus(item);
+                return (
+                  <>
+                    <div className={`${statusInfo.bgColor} border-2 ${statusInfo.borderColor} rounded-md px-4 py-2 text-center`}>
+                      <p className={`${statusInfo.textColor} font-semibold text-lg`}>
+                        {statusInfo.status}
+                        {statusInfo.status === "Completed" && " ✓"}
+                      </p>
+                    </div>
 
-                  {!item.payment && (
-                    <button
-                      className="text-lg text-white bg-[rgb(95,111,255)] sm:min-w-48 py-3 px-4 rounded-md shadow-md hover:bg-[rgb(49,61,151)] transition-all duration-300 flex items-center justify-center"
-                      onClick={() => handlePayment(item._id)}
-                      disabled={loadingPayment === item._id}
-                    >
-                      {loadingPayment === item._id ? (
-                        <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-5 h-5"></span>
-                      ) : (
-                        "Pay Online"
-                      )}
-                    </button>
-                  )}
+                    {!item.cancelled && (
+                      <>
+                        {item.payment && !item.isCompleted && (
+                          <p className="text-green-500 px-4 py-2 border-2 border-green-500 text-center font-medium rounded-md">
+                            Paid ✓
+                          </p>
+                        )}
 
-                  <button
-                    className="text-lg text-white bg-red-500 sm:min-w-48 py-3 px-4 rounded-md shadow-md hover:bg-red-700 transition-all duration-300 flex items-center justify-center"
-                    onClick={() => cancelAppointment(item._id)}
-                    disabled={loadingCancel === item._id}
-                  >
-                    {loadingCancel === item._id ? (
-                      <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-5 h-5"></span>
-                    ) : (
-                      "Cancel Appointment"
+                        {item.isCompleted ? (
+                          <p className="text-gray-500 px-4 py-2 border-2 border-gray-300 text-center text-sm font-medium rounded-md italic">
+                            No action needed
+                          </p>
+                        ) : (
+                          <>
+                            {!item.payment && (
+                              <button
+                                className="text-lg text-white bg-[rgb(95,111,255)] sm:min-w-48 py-3 px-4 rounded-md shadow-md hover:bg-[rgb(49,61,151)] transition-all duration-300 flex items-center justify-center"
+                                onClick={() => handlePayment(item._id)}
+                                disabled={loadingPayment === item._id}
+                              >
+                                {loadingPayment === item._id ? (
+                                  <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-5 h-5"></span>
+                                ) : (
+                                  "Pay Online"
+                                )}
+                              </button>
+                            )}
+
+                            <button
+                              className="text-lg text-white bg-red-500 sm:min-w-48 py-3 px-4 rounded-md shadow-md hover:bg-red-700 transition-all duration-300 flex items-center justify-center"
+                              onClick={() => cancelAppointment(item._id)}
+                              disabled={loadingCancel === item._id}
+                            >
+                              {loadingCancel === item._id ? (
+                                <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-5 h-5"></span>
+                              ) : (
+                                "Cancel Appointment"
+                              )}
+                            </button>
+                          </>
+                        )}
+                      </>
                     )}
-                  </button>
-                </>
-              )}
+                  </>
+                );
+              })()}
             </div>
           </div>
         ))}

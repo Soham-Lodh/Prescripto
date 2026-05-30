@@ -1,12 +1,14 @@
 import React, { useContext } from "react";
 import { AdminContext } from "../context/AdminContext";
+import { DoctorContext } from "../context/DoctorContext";
 import { NavLink } from "react-router-dom";
 import { assets } from "../assets/assets";
 
 const SideBar = () => {
   const { aToken } = useContext(AdminContext);
+  const { dToken } = useContext(DoctorContext);
 
-  const menuItems = [
+  const adminMenuItems = [
     {
       to: "/all-appointments",
       icon: assets.appointment_icon,
@@ -36,9 +38,35 @@ const SideBar = () => {
     }
   ];
 
+  const doctorMenuItems = [
+    {
+      to: "/doctor-dashboard",
+      icon: assets.home_icon,
+      label: "Dashboard",
+      description: "Your overview",
+      iconType: "image"
+    },
+    {
+      to: "/doctor-appointments",
+      icon: assets.appointment_icon,
+      label: "Appointments",
+      description: "Your appointments",
+      iconType: "image"
+    },
+    {
+      to: "/doctor-profile",
+      icon: assets.people_icon,
+      label: "Profile",
+      description: "Your profile",
+      iconType: "image"
+    }
+  ];
+
+  const menuItems = dToken ? doctorMenuItems : adminMenuItems;
+
   return (
     <aside className="min-h-screen bg-gradient-to-b from-gray-50 to-white border-r border-gray-200/80 shadow-sm">
-      {aToken && (
+      {(aToken || dToken) && (
         <nav className="py-8 px-4">
           {/* Header */}
           <div className="mb-8 px-4">
