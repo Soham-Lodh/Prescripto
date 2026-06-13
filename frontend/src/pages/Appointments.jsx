@@ -27,7 +27,7 @@ const Appointments = () => {
     const customNow = new Date();
     const allSlots = [];
     const startHour = 10;
-    const endHour = 16;
+    const endHour = 20;
 
     for (let i = 0; i < 7; i++) {
       const curDate = new Date(customNow);
