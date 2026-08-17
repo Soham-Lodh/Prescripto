@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets_frontend/assets";
 import { AppContext } from "../context/AppContext";
+import { invalidateCache } from "../utils/requestCache";
 
 const NavBar = () => {
   const navigate = useNavigate();
@@ -33,6 +34,8 @@ const NavBar = () => {
 
   const logout = () => {
     localStorage.removeItem("token");
+    invalidateCache("user:");
+    invalidateCache("public:doctors-list");
     setToken(false);
     setShowDropdown(false);
     navigate("/");

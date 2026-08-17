@@ -122,6 +122,21 @@ function checkPasswordStrength(password, name, email) {
   return { valid: true, message: "Password is strong." };
 }
 
+async function uploadDoctorImage(imageFile) {
+  const result = await new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { resource_type: "image" },
+      (err, res) => {
+        if (err) reject(err);
+        else resolve(res);
+      }
+    );
+    stream.end(imageFile.buffer);
+  });
+
+  return result.secure_url;
+}
+
 export const loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -156,6 +171,167 @@ export const allDoctors = async (req, res) => {
     return res.json({
       success: false,
       message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+export const updateDoctor = async (req, res) => {
+  try {
+    const {
+      docId,
+      name,
+      email,
+      password,
+      speciality,
+      degree,
+      experience,
+      about,
+      fees,
+      address,
+      available,
+    } = req.body;
+    const imageFile = req.file;
+
+    if (!docId) {
+      return res.status(400).json({
+        success: false,
+        message: "Doctor id is required",
+      });
+    }
+
+    const doctor = await doctorModel.findById(docId);
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found",
+      });
+    }
+
+    const nextEmail = email?.trim() || doctor.email;
+    if (!validator.isEmail(nextEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter a valid email",
+      });
+    }
+
+    let parsedAddress = doctor.address;
+    if (address) {
+      try {
+        parsedAddress = JSON.parse(address);
+      } catch (error) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid address format",
+        });
+      }
+    }
+
+    const updateData = {
+      name: name?.trim() || doctor.name,
+      email: nextEmail,
+      speciality: speciality || doctor.speciality,
+      degree: degree || doctor.degree,
+      experience: experience || doctor.experience,
+      about: about || doctor.about,
+      fees: fees !== undefined && fees !== "" ? Number(fees) : doctor.fees,
+      address: parsedAddress,
+      available:
+        available === undefined || available === ""
+          ? doctor.available
+          : available === true || available === "true",
+    };
+
+    if (Number.isNaN(updateData.fees)) {
+      return res.status(400).json({
+        success: false,
+        message: "Fees must be a valid number",
+      });
+    }
+
+    if (password && password.trim()) {
+      const passwordCheck = checkPasswordStrength(
+        password,
+        updateData.name,
+        updateData.email
+      );
+      if (!passwordCheck.valid) {
+        return res.status(400).json({
+          success: false,
+          message: passwordCheck.message,
+        });
+      }
+
+      const salt = await bcrypt.genSalt(15);
+      updateData.password = await bcrypt.hash(password, salt);
+    }
+
+    if (imageFile) {
+      updateData.image = await uploadDoctorImage(imageFile);
+    }
+
+    const updatedDoctor = await doctorModel
+      .findByIdAndUpdate(docId, updateData, { new: true })
+      .select("-password");
+
+    return res.json({
+      success: true,
+      message: "Doctor details updated successfully",
+      doctor: updatedDoctor,
+    });
+  } catch (err) {
+    console.error("Error updating doctor:", err);
+
+    if (err?.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already exists",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error while updating doctor",
+      error: err.message,
+    });
+  }
+};
+
+export const deleteDoctor = async (req, res) => {
+  try {
+    const { docId } = req.body;
+
+    if (!docId) {
+      return res.status(400).json({
+        success: false,
+        message: "Doctor id is required",
+      });
+    }
+
+    const doctor = await doctorModel.findById(docId);
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found",
+      });
+    }
+
+    const deletedAppointments = await appointmentModel.deleteMany({
+      docId,
+    });
+
+    await doctorModel.findByIdAndDelete(docId);
+
+    return res.json({
+      success: true,
+      message: `Doctor deleted successfully with ${deletedAppointments.deletedCount} related appointments removed`,
+    });
+  } catch (err) {
+    console.error("Error deleting doctor:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while deleting doctor",
       error: err.message,
     });
   }

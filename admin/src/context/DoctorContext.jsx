@@ -1,6 +1,7 @@
 import { createContext, useState } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
+import { cachedRequest, invalidateCache } from "../utils/requestCache";
 
 export const DoctorContext = createContext();
 
@@ -11,17 +12,35 @@ const DoctorContextProvider = (props) => {
   const [dashData, setDashData] = useState({});
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
-  const getDoctorProfile = async () => {
+  const clearDoctorSession = (message = "Session expired. Please log in again.") => {
+    localStorage.removeItem("dToken");
+    setDToken("");
+    invalidateCache("doctor:");
+    toast.error(message);
+  };
+
+  const getDoctorProfile = async ({ force = false } = {}) => {
     try {
-      const { data } = await axios.post(
-        `${backendUrl}/api/doctor/profile`,
-        {},
-        { headers: { dtoken: dToken } }
+      const data = await cachedRequest(
+        `doctor:profile:${dToken}`,
+        async () => {
+          const response = await axios.post(
+            `${backendUrl}/api/doctor/profile`,
+            {},
+            { headers: { dtoken: dToken } }
+          );
+          return response.data;
+        },
+        { ttlMs: 30000, force }
       );
 
       if (data.success) {
         setDoctorData(data.doctor);
       } else {
+        if (String(data.message || "").toLowerCase().includes("authorized")) {
+          clearDoctorSession(data.message);
+          return;
+        }
         toast.error(data.message);
       }
     } catch (err) {
@@ -41,8 +60,13 @@ const DoctorContextProvider = (props) => {
       if (data.success) {
         toast.success(data.message);
         setDoctorData(data.doctor);
+        invalidateCache(`doctor:profile:${dToken}`);
         return true;
       } else {
+        if (String(data.message || "").toLowerCase().includes("authorized")) {
+          clearDoctorSession(data.message);
+          return false;
+        }
         toast.error(data.message);
         return false;
       }
@@ -67,26 +91,45 @@ const DoctorContextProvider = (props) => {
           ...prev,
           available: !prev.available,
         }));
+        invalidateCache(`doctor:profile:${dToken}`);
+        return true;
       } else {
+        if (String(data.message || "").toLowerCase().includes("authorized")) {
+          clearDoctorSession(data.message);
+          return false;
+        }
         toast.error(data.message);
+        return false;
       }
     } catch (err) {
       console.error(err);
       toast.error("Error changing availability");
+      return false;
     }
   };
 
-  const getDoctorAppointments = async () => {
+  const getDoctorAppointments = async ({ force = false } = {}) => {
     try {
-      const { data } = await axios.post(
-        `${backendUrl}/api/doctor/appointments`,
-        {},
-        { headers: { dtoken: dToken } }
+      const data = await cachedRequest(
+        `doctor:appointments:${dToken}`,
+        async () => {
+          const response = await axios.post(
+            `${backendUrl}/api/doctor/appointments`,
+            {},
+            { headers: { dtoken: dToken } }
+          );
+          return response.data;
+        },
+        { ttlMs: 15000, force }
       );
 
       if (data.success) {
         setAppointments(data.appointments);
       } else {
+        if (String(data.message || "").toLowerCase().includes("authorized")) {
+          clearDoctorSession(data.message);
+          return;
+        }
         toast.error(data.message);
       }
     } catch (err) {
@@ -105,13 +148,21 @@ const DoctorContextProvider = (props) => {
 
       if (data.success) {
         toast.success(data.message);
-        getDoctorAppointments();
+        invalidateCache(`doctor:appointments:${dToken}`);
+        getDoctorAppointments({ force: true });
+        return true;
       } else {
+        if (String(data.message || "").toLowerCase().includes("authorized")) {
+          clearDoctorSession(data.message);
+          return false;
+        }
         toast.error(data.message);
+        return false;
       }
     } catch (err) {
       console.error(err);
       toast.error("Error cancelling appointment");
+      return false;
     }
   };
 
@@ -125,27 +176,46 @@ const DoctorContextProvider = (props) => {
 
       if (data.success) {
         toast.success(data.message);
-        getDoctorAppointments();
+        invalidateCache(`doctor:appointments:${dToken}`);
+        getDoctorAppointments({ force: true });
+        return true;
       } else {
+        if (String(data.message || "").toLowerCase().includes("authorized")) {
+          clearDoctorSession(data.message);
+          return false;
+        }
         toast.error(data.message);
+        return false;
       }
     } catch (err) {
       console.error(err);
       toast.error("Error updating appointment");
+      return false;
     }
   };
 
-  const getDashboardData = async () => {
+  const getDashboardData = async ({ force = false } = {}) => {
     try {
-      const { data } = await axios.post(
-        `${backendUrl}/api/doctor/dashboard`,
-        {},
-        { headers: { dtoken: dToken } }
+      const data = await cachedRequest(
+        `doctor:dashboard:${dToken}`,
+        async () => {
+          const response = await axios.post(
+            `${backendUrl}/api/doctor/dashboard`,
+            {},
+            { headers: { dtoken: dToken } }
+          );
+          return response.data;
+        },
+        { ttlMs: 10000, force }
       );
 
       if (data.success) {
         setDashData(data.dashData);
       } else {
+        if (String(data.message || "").toLowerCase().includes("authorized")) {
+          clearDoctorSession(data.message);
+          return;
+        }
         toast.error(data.message);
       }
     } catch (err) {
@@ -161,17 +231,17 @@ const DoctorContextProvider = (props) => {
     doctorData,
     setDoctorData,
     getDoctorProfile,
-    updateDoctorProfile,
-    changeAvailability,
-    appointments,
-    setAppointments,
-    getDoctorAppointments,
-    cancelAppointment,
-    completeAppointment,
-    dashData,
-    setDashData,
-    getDashboardData,
-  };
+        updateDoctorProfile,
+        changeAvailability,
+        appointments,
+        setAppointments,
+        getDoctorAppointments,
+        cancelAppointment,
+        completeAppointment,
+        dashData,
+        setDashData,
+        getDashboardData,
+      };
 
   return (
     <DoctorContext.Provider value={value}>

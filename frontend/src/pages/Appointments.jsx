@@ -6,6 +6,7 @@ import axios from "axios";
 import { AppContext } from "../context/AppContext";
 import { assets } from "../assets/assets_frontend/assets";
 import RelatedDoctors from "../components/RelatedDoctors";
+import PremiumConfirmModal from "../components/PremiumConfirmModal";
 
 const Appointments = () => {
   const navigate = useNavigate();
@@ -16,7 +17,9 @@ const Appointments = () => {
   const [slotIndex, setSlotIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [selectedTime, setSelectedTime] = useState(null);
+  const [bookingPreview, setBookingPreview] = useState(null);
   const daysOfWeek = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+  const isBookingModalOpen = Boolean(bookingPreview);
 
   const fetchDocInfo = () => {
     const info = doctors.find((doc) => String(doc._id) === String(docId));
@@ -81,7 +84,7 @@ const Appointments = () => {
     setSlotIndex(firstAvailableDay >= 0 ? firstAvailableDay : 0);
   };
 
-  const bookAppointment = async () => {
+  const openBookingConfirm = () => {
     if (!token) {
       toast.warn("Please login to book an appointment");
       navigate("/login");
@@ -91,28 +94,48 @@ const Appointments = () => {
       toast.warn("Please select a time slot");
       return;
     }
+    const slotObj = docSlots[slotIndex].find((slot) => slot.time === selectedTime);
+    if (!slotObj) {
+      toast.error("Selected slot not found");
+      return;
+    }
+
+    const date = slotObj.dateTime;
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear();
+    const slotDate = `${day}-${month}-${year}`;
+
+    setBookingPreview({
+      slotDate,
+      slotTime: selectedTime,
+      slotDateLabel: date.toLocaleDateString("en-IN", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      }),
+    });
+  };
+
+  const confirmBooking = async () => {
+    if (!bookingPreview) return;
+
     try {
       setLoading(true);
-      const slotObj = docSlots[slotIndex].find((slot) => slot.time === selectedTime);
-      if (!slotObj) {
-        toast.error("Selected slot not found");
-        return;
-      }
-      const date = slotObj.dateTime;
-      const day = date.getDate().toString().padStart(2, "0");
-      const month = (date.getMonth() + 1).toString().padStart(2, "0");
-      const year = date.getFullYear();
-      const slotDate = `${day}-${month}-${year}`;
-
       const { data } = await axios.post(
         `${backendURL}/api/user/book-appointment`,
-        { docId, slotDate, slotTime: selectedTime },
+        {
+          docId,
+          slotDate: bookingPreview.slotDate,
+          slotTime: bookingPreview.slotTime,
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (data.success) {
         toast.success(data.message);
-        getDoctorsData();
+        setBookingPreview(null);
+        await getDoctorsData({ force: true });
         navigate("/my-appointments");
       } else {
         toast.error(data.message);
@@ -151,7 +174,14 @@ const Appointments = () => {
     );
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mt-8 sm:mt-12 pb-16">
+    <div className={`relative isolate px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mt-8 sm:mt-12 pb-16 transition-all duration-300 ${
+      isBookingModalOpen ? "blur-[2px] brightness-75 scale-[0.995] pointer-events-none select-none" : ""
+    }`}>
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute -left-24 top-24 h-72 w-72 rounded-full bg-blue-400/10 blur-3xl"></div>
+        <div className="absolute right-0 top-56 h-80 w-80 rounded-full bg-indigo-400/10 blur-3xl"></div>
+        <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-cyan-400/10 blur-3xl"></div>
+      </div>
       <Helmet>
         <title>{`Book ${docInfo.name} | Prescripto`}</title>
         <meta name="description" content={`Book an appointment with ${docInfo.name}, a specialist in ${docInfo.speciality}.`} />
@@ -338,7 +368,7 @@ const Appointments = () => {
 
               {/* Book Button */}
               <button
-                onClick={bookAppointment}
+                onClick={openBookingConfirm}
                 disabled={loading}
                 className="group inline-flex items-center gap-3 bg-gradient-to-br from-blue-600 to-blue-700 text-white px-8 py-3.5 rounded-full font-bold text-sm shadow-xl shadow-blue-200 hover:shadow-2xl hover:scale-105 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
@@ -352,7 +382,7 @@ const Appointments = () => {
                   </>
                 ) : (
                   <>
-                    Book Appointment
+                    Review Booking
                     <span className="bg-white/20 p-1.5 rounded-full group-hover:translate-x-1 transition-transform duration-300">
                       <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -371,6 +401,57 @@ const Appointments = () => {
       <div className="mt-12">
         <RelatedDoctors docId={docId} speciality={docInfo.speciality} />
       </div>
+
+      <PremiumConfirmModal
+        open={Boolean(bookingPreview)}
+        title="Confirm Appointment"
+        subtitle="Review the doctor and slot before we reserve it."
+        tone="primary"
+        confirmLabel="Confirm Booking"
+        cancelLabel="Back"
+        loading={loading}
+        onConfirm={confirmBooking}
+        onCancel={() => setBookingPreview(null)}
+        meta={
+          <div className="flex items-center gap-4">
+            <img
+              src={docInfo.image}
+              alt={docInfo.name}
+              className="h-14 w-14 rounded-2xl object-cover ring-2 ring-white shadow-md"
+            />
+            <div>
+              <p className="text-base font-bold">{docInfo.name}</p>
+              <p className="text-sm opacity-90">{docInfo.speciality}</p>
+              <p className="text-sm opacity-90">{docInfo.degree}</p>
+            </div>
+          </div>
+        }
+      >
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Appointment Date
+            </p>
+            <p className="mt-1 text-base font-bold text-slate-900">
+              {bookingPreview?.slotDateLabel}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Appointment Time
+            </p>
+            <p className="mt-1 text-base font-bold text-slate-900">
+              {bookingPreview?.slotTime}
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3">
+          <p className="text-sm font-medium text-blue-800">
+            The appointment will be reserved immediately after confirmation and the selected slot will be locked for others.
+          </p>
+        </div>
+      </PremiumConfirmModal>
     </div>
   );
 };

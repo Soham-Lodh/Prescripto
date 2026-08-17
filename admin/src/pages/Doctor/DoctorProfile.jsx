@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { DoctorContext } from "../../context/DoctorContext";
+import PremiumConfirmModal from "../../components/PremiumConfirmModal";
 
 const DoctorProfile = () => {
   const { dToken, doctorData, getDoctorProfile, updateDoctorProfile, changeAvailability } =
@@ -7,6 +8,14 @@ const DoctorProfile = () => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+  const [showAvailabilityConfirm, setShowAvailabilityConfirm] = useState(false);
+  const [pendingSubmitData, setPendingSubmitData] = useState(null);
+  const [pendingChanges, setPendingChanges] = useState([]);
+  const [saveMeta, setSaveMeta] = useState(null);
+  const [profilePreview, setProfilePreview] = useState("");
   const [formData, setFormData] = useState({
     speciality: "",
     degree: "",
@@ -32,8 +41,17 @@ const DoctorProfile = () => {
         fees: doctorData.fees || "",
         address: doctorData.address || {},
       });
+      setProfilePreview(doctorData.image || "");
     }
   }, [doctorData]);
+
+  useEffect(() => {
+    if (!profileImage) return;
+
+    const objectUrl = URL.createObjectURL(profileImage);
+    setProfilePreview(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [profileImage]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -59,15 +77,10 @@ const DoctorProfile = () => {
     const file = e.target.files[0];
     if (file) {
       setProfileImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        // Can use for preview if needed
-      };
-      reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = async (e) => {
+  const openSaveConfirm = (e) => {
     e.preventDefault();
 
     const submitData = new FormData();
@@ -82,17 +95,84 @@ const DoctorProfile = () => {
       submitData.append("docImg", profileImage);
     }
 
-    const success = await updateDoctorProfile(submitData);
+    const changes = [
+      { label: "Speciality", before: doctorData.speciality, after: formData.speciality },
+      { label: "Degree", before: doctorData.degree, after: formData.degree },
+      { label: "Experience", before: doctorData.experience, after: formData.experience },
+      { label: "Fees", before: `$${doctorData.fees}`, after: `$${formData.fees}` },
+      { label: "About", before: doctorData.about, after: formData.about },
+      {
+        label: "Address",
+        before: `${doctorData.address?.line1 || ""} ${doctorData.address?.line2 || ""}`.trim(),
+        after: `${formData.address?.line1 || ""} ${formData.address?.line2 || ""}`.trim(),
+      },
+    ].filter((item) => String(item.before) !== String(item.after));
+
+    if (profileImage) {
+      changes.unshift({ label: "Photo", before: "Current photo", after: "New photo selected" });
+    }
+
+    setPendingSubmitData(submitData);
+    setPendingChanges(changes);
+    setSaveMeta(
+      <div className="flex items-center gap-4">
+        <img
+          src={profilePreview || doctorData.image}
+          alt={doctorData.name}
+          className="h-14 w-14 rounded-2xl object-cover ring-2 ring-white shadow-md"
+        />
+        <div>
+          <p className="text-base font-bold">{doctorData.name}</p>
+          <p className="text-sm opacity-90">{doctorData.speciality}</p>
+          <p className="text-sm opacity-90">{doctorData.email}</p>
+        </div>
+      </div>
+    );
+    setShowSaveConfirm(true);
+  };
+
+  const closeSaveConfirm = () => {
+    setShowSaveConfirm(false);
+    setPendingSubmitData(null);
+    setPendingChanges([]);
+    setSaveMeta(null);
+  };
+
+  const confirmProfileUpdate = async () => {
+    if (!pendingSubmitData) return;
+
+    setSaving(true);
+    const success = await updateDoctorProfile(pendingSubmitData);
+    setSaving(false);
+
     if (success) {
+      closeSaveConfirm();
       setIsEditing(false);
       setProfileImage(null);
+    }
+  };
+
+  const openAvailabilityConfirm = () => {
+    setShowAvailabilityConfirm(true);
+  };
+
+  const closeAvailabilityConfirm = () => {
+    setShowAvailabilityConfirm(false);
+  };
+
+  const confirmAvailabilityChange = async () => {
+    setAvailabilityLoading(true);
+    const success = await changeAvailability();
+    setAvailabilityLoading(false);
+
+    if (success) {
+      closeAvailabilityConfirm();
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 p-6 sm:p-10">
       <div className="max-w-4xl mx-auto">
-        {/* HEADER */}
         <div className="text-center mb-10 animate-fadeIn">
           <h1 className="text-4xl sm:text-5xl font-extrabold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
             Your Profile
@@ -100,12 +180,9 @@ const DoctorProfile = () => {
           <p className="text-gray-600 mt-2">Manage your professional information</p>
         </div>
 
-        {/* MAIN CARD */}
         <div className="bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden">
-          {/* PROFILE HEADER */}
           <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 px-8 py-12 text-white">
             <div className="flex flex-col sm:flex-row items-center gap-6">
-              {/* PROFILE IMAGE */}
               <div className="relative">
                 <img
                   src={doctorData.image}
@@ -137,7 +214,6 @@ const DoctorProfile = () => {
                 )}
               </div>
 
-              {/* INFO */}
               <div className="text-center sm:text-left flex-1">
                 <h2 className="text-3xl font-bold">{doctorData.name}</h2>
                 <p className="text-indigo-100 mt-1 text-lg">{doctorData.speciality}</p>
@@ -146,35 +222,32 @@ const DoctorProfile = () => {
                 </p>
               </div>
 
-              {/* AVAILABILITY TOGGLE */}
               <div className="sm:absolute sm:top-8 sm:right-8">
-                <label className="flex items-center gap-3 cursor-pointer bg-white/20 backdrop-blur-md px-4 py-2 rounded-full hover:bg-white/30 transition">
+                <button
+                  type="button"
+                  onClick={openAvailabilityConfirm}
+                  className="flex items-center gap-3 cursor-pointer bg-white/20 backdrop-blur-md px-4 py-2 rounded-full hover:bg-white/30 transition"
+                >
                   <div className="relative">
-                    <input
-                      type="checkbox"
-                      checked={doctorData.available}
-                      onChange={() => changeAvailability()}
-                      className="sr-only peer"
-                    />
                     <div className="w-10 h-6 bg-gray-200 rounded-full shadow-inner peer-checked:bg-green-500 transition-all duration-300"></div>
-                    <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-md peer-checked:translate-x-4 transition-all duration-300"></div>
+                    <div
+                      className={`absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-md transition-all duration-300 ${
+                        doctorData.available ? "translate-x-4" : ""
+                      }`}
+                    ></div>
                   </div>
                   <span className="text-sm font-medium whitespace-nowrap">
                     {doctorData.available ? "Available" : "Unavailable"}
                   </span>
-                </label>
+                </button>
               </div>
             </div>
           </div>
 
-          {/* CONTENT */}
           <div className="p-8">
             {!isEditing ? (
-              // VIEW MODE
               <div className="space-y-8">
-                {/* GRID INFO */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {/* INFO CARD */}
                   {[
                     { label: "Email", value: doctorData.email, editable: false },
                     { label: "Degree", value: doctorData.degree, editable: true },
@@ -197,7 +270,6 @@ const DoctorProfile = () => {
                   ))}
                 </div>
 
-                {/* ABOUT */}
                 <div className="p-6 bg-indigo-50 rounded-xl border border-indigo-200">
                   <p className="text-gray-600 text-sm font-semibold uppercase tracking-wide mb-3">
                     About
@@ -205,7 +277,6 @@ const DoctorProfile = () => {
                   <p className="text-gray-700 leading-relaxed">{doctorData.about}</p>
                 </div>
 
-                {/* ADDRESS */}
                 <div className="p-6 bg-purple-50 rounded-xl border border-purple-200">
                   <p className="text-gray-600 text-sm font-semibold uppercase tracking-wide mb-3">
                     Address
@@ -222,7 +293,6 @@ const DoctorProfile = () => {
                   </div>
                 </div>
 
-                {/* EDIT BUTTON */}
                 <button
                   onClick={() => setIsEditing(true)}
                   className="w-full py-3 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300"
@@ -231,8 +301,7 @@ const DoctorProfile = () => {
                 </button>
               </div>
             ) : (
-              // EDIT MODE
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={openSaveConfirm} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-gray-700 font-semibold mb-2">
@@ -297,7 +366,6 @@ const DoctorProfile = () => {
                   />
                 </div>
 
-                {/* ADDRESS FIELDS */}
                 <div className="border-t pt-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Address
@@ -322,13 +390,12 @@ const DoctorProfile = () => {
                   </div>
                 </div>
 
-                {/* BUTTONS */}
                 <div className="flex gap-4 pt-6 border-t">
                   <button
                     type="submit"
                     className="flex-1 py-3 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300"
                   >
-                    Save Changes
+                    Review Changes
                   </button>
                   <button
                     type="button"
@@ -346,6 +413,86 @@ const DoctorProfile = () => {
           </div>
         </div>
       </div>
+
+      <PremiumConfirmModal
+        open={showSaveConfirm}
+        tone="primary"
+        title="Confirm Profile Update"
+        subtitle="Review the doctor profile changes before saving."
+        confirmLabel="Save Profile"
+        cancelLabel="Back"
+        loading={saving}
+        onConfirm={confirmProfileUpdate}
+        onCancel={closeSaveConfirm}
+        meta={saveMeta}
+      >
+        <div className="space-y-3">
+          {pendingChanges.length > 0 ? (
+            pendingChanges.map((item) => (
+              <div
+                key={item.label}
+                className="grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-[1fr_1.2fr_1.2fr]"
+              >
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  {item.label}
+                </p>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Before</p>
+                  <p className="mt-1 text-sm font-medium text-slate-700">{item.before || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">After</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">{item.after || "—"}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-amber-800">
+              No visible changes detected, but the profile will still be revalidated.
+            </div>
+          )}
+        </div>
+      </PremiumConfirmModal>
+
+      <PremiumConfirmModal
+        open={showAvailabilityConfirm}
+        tone="success"
+        title="Confirm Availability Change"
+        subtitle="This will update your visible booking status."
+        confirmLabel={doctorData.available ? "Make Unavailable" : "Make Available"}
+        cancelLabel="Cancel"
+        loading={availabilityLoading}
+        onConfirm={confirmAvailabilityChange}
+        onCancel={closeAvailabilityConfirm}
+        meta={
+          <div className="flex items-center gap-4">
+            <img
+              src={doctorData.image}
+              alt={doctorData.name}
+              className="h-14 w-14 rounded-2xl object-cover ring-2 ring-white shadow-md"
+            />
+            <div>
+              <p className="text-base font-bold">{doctorData.name}</p>
+              <p className="text-sm opacity-90">{doctorData.speciality}</p>
+            </div>
+          </div>
+        }
+      >
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Current Status</p>
+            <p className="mt-1 text-base font-bold text-slate-900">
+              {doctorData.available ? "Available" : "Unavailable"}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">New Status</p>
+            <p className="mt-1 text-base font-bold text-slate-900">
+              {doctorData.available ? "Unavailable" : "Available"}
+            </p>
+          </div>
+        </div>
+      </PremiumConfirmModal>
 
       <style>
         {`

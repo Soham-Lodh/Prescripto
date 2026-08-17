@@ -3,6 +3,8 @@ import axios from "axios";
 import { assets } from "../../assets/assets";
 import { AdminContext } from "../../context/AdminContext";
 import { toast } from "react-toastify";
+import { invalidateCache } from "../../utils/requestCache";
+import PremiumConfirmModal from "../../components/PremiumConfirmModal";
 
 const AddDoctor = () => {
   const [docImg, setDocImg] = useState(null);
@@ -17,11 +19,44 @@ const AddDoctor = () => {
   const [address2, setAddress2] = useState("");
   const [about, setAbout] = useState("");
   const [loading, setLoading] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingPreview, setPendingPreview] = useState(null);
   const { backendUrl, aToken } = useContext(AdminContext);
 
-  const onSubmitHandler = async (event) => {
+  const buildPreview = () => ({
+    name,
+    email,
+    experience,
+    fee,
+    speciality,
+    education,
+    address1,
+    address2,
+    about,
+    image: docImg ? URL.createObjectURL(docImg) : "",
+  });
+
+  const openConfirmModal = (event) => {
     event.preventDefault();
 
+    if (!docImg) return toast.error("Please upload doctor's image");
+
+    if (pendingPreview?.image?.startsWith("blob:")) {
+      URL.revokeObjectURL(pendingPreview.image);
+    }
+    setPendingPreview(buildPreview());
+    setConfirmOpen(true);
+  };
+
+  const closeConfirmModal = () => {
+    if (pendingPreview?.image?.startsWith("blob:")) {
+      URL.revokeObjectURL(pendingPreview.image);
+    }
+    setConfirmOpen(false);
+    setPendingPreview(null);
+  };
+
+  const onSubmitHandler = async () => {
     if (!docImg) return toast.error("Please upload doctor's image");
 
     const formData = new FormData();
@@ -54,6 +89,8 @@ const AddDoctor = () => {
 
       if (data.success) {
         toast.success(data.message);
+        invalidateCache("admin:doctors");
+        closeConfirmModal();
         setDocImg(null);
         setName("");
         setEmail("");
@@ -92,7 +129,7 @@ const AddDoctor = () => {
 
         {/* Form */}
         <form
-          onSubmit={onSubmitHandler}
+          onSubmit={openConfirmModal}
           className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden"
         >
           <div className="p-8 sm:p-10 space-y-8">
@@ -348,12 +385,62 @@ const AddDoctor = () => {
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  <span>Add Doctor to Team</span>
+                  <span>Review Doctor</span>
                 </>
               )}
             </button>
           </div>
         </form>
+
+        <PremiumConfirmModal
+          open={confirmOpen}
+          title="Confirm New Doctor"
+          subtitle="Review the profile details before creating the account."
+          tone="primary"
+          confirmLabel="Create Doctor"
+          cancelLabel="Back"
+          loading={loading}
+          onConfirm={onSubmitHandler}
+          onCancel={closeConfirmModal}
+          meta={
+            <div className="flex items-center gap-4">
+              <img
+                src={pendingPreview?.image || assets.upload_area}
+                alt={pendingPreview?.name || "Doctor preview"}
+                className="h-14 w-14 rounded-2xl object-cover ring-2 ring-white shadow-md"
+              />
+              <div>
+                <p className="text-base font-bold">{pendingPreview?.name || "New Doctor"}</p>
+                <p className="text-sm opacity-90">{pendingPreview?.speciality}</p>
+                <p className="text-sm opacity-90">{pendingPreview?.email}</p>
+              </div>
+            </div>
+          }
+        >
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Fee</p>
+              <p className="mt-1 text-base font-bold text-slate-900">${pendingPreview?.fee}</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Experience</p>
+              <p className="mt-1 text-base font-bold text-slate-900">{pendingPreview?.experience} years</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 sm:col-span-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Address</p>
+              <p className="mt-1 text-sm font-medium text-slate-900">
+                {pendingPreview?.address1}
+              </p>
+              <p className="text-sm text-slate-700">{pendingPreview?.address2}</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 sm:col-span-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">About</p>
+              <p className="mt-1 text-sm text-slate-700 line-clamp-4">
+                {pendingPreview?.about}
+              </p>
+            </div>
+          </div>
+        </PremiumConfirmModal>
       </div>
     </div>
   );

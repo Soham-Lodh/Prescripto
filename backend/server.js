@@ -80,6 +80,7 @@ app.get("/sitemap.xml", async (req, res) => {
     </urlset>`;
 
     res.header("Content-Type", "application/xml");
+    res.header("Cache-Control", "public, max-age=3600, stale-while-revalidate=86400");
     res.send(sitemap);
   } catch (error) {
     console.error("Sitemap error:", error);

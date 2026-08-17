@@ -4,6 +4,7 @@ import { assets } from "../assets/assets";
 import { AdminContext } from "../context/AdminContext";
 import { DoctorContext } from "../context/DoctorContext";
 import { toast } from "react-toastify";
+import { invalidateCache as invalidateAdminCache } from "../utils/requestCache";
 
 const NavBar = () => {
   const navigate = useNavigate();
@@ -15,10 +16,12 @@ const NavBar = () => {
     if (aToken) {
       setAToken("");
       localStorage.removeItem("aToken");
+      invalidateAdminCache("admin:");
     }
     if (dToken) {
       setDToken("");
       localStorage.removeItem("dToken");
+      invalidateAdminCache("doctor:");
     }
     toast.success("Logged out successfully");
     navigate("/");

@@ -6,7 +6,9 @@ import {
   appointmentsAdmin,
   adminCancelAppointment,
   messages,
-  adminDashboard
+  adminDashboard,
+  updateDoctor,
+  deleteDoctor
 } from "../controllers/adminController.js";
 import authAdmin from "../middleware/authAdmin.js";
 import upload from "../middleware/multer.js";
@@ -16,6 +18,8 @@ const adminRouter = express.Router();
 adminRouter.post("/add-doctor", authAdmin, upload.single("docImg"), addDoctor);
 adminRouter.post("/login", loginAdmin);
 adminRouter.post("/all-doctors", authAdmin, allDoctors);
+adminRouter.post("/update-doctor", authAdmin, upload.single("docImg"), updateDoctor);
+adminRouter.post("/delete-doctor", authAdmin, deleteDoctor);
 adminRouter.get("/appointments",authAdmin,appointmentsAdmin);
 adminRouter.post("/change-availability", authAdmin, changeAvailability);
 adminRouter.post("/admin-cancel-appointment",authAdmin,adminCancelAppointment);

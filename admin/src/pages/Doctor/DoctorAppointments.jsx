@@ -1,12 +1,15 @@
-﻿import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { DoctorContext } from "../../context/DoctorContext";
 import { AppContext } from "../../context/AppContext";
+import PremiumConfirmModal from "../../components/PremiumConfirmModal";
 
 const DoctorAppointments = () => {
   const { dToken, appointments, getDoctorAppointments, cancelAppointment, completeAppointment } =
     useContext(DoctorContext);
   const { calculateAge, slotDateFormat } = useContext(AppContext);
   const [sortOrder, setSortOrder] = useState("latest");
+  const [pendingAction, setPendingAction] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     if (dToken) {
@@ -31,16 +34,38 @@ const DoctorAppointments = () => {
   const formatTime = (time) => {
     if (!time) return "—";
     const [h, m] = time.split(":");
-    const hour = parseInt(h);
+    const hour = parseInt(h, 10);
     const suffix = hour >= 12 ? "PM" : "AM";
     const display = hour % 12 || 12;
     return `${display}:${m} ${suffix}`;
   };
 
+  const openActionConfirm = (appointment, action) => {
+    setPendingAction({ appointment, action });
+  };
+
+  const closeActionConfirm = () => {
+    setPendingAction(null);
+  };
+
+  const confirmAppointmentAction = async () => {
+    if (!pendingAction?.appointment) return;
+
+    setActionLoading(true);
+    const success =
+      pendingAction.action === "complete"
+        ? await completeAppointment(pendingAction.appointment._id)
+        : await cancelAppointment(pendingAction.appointment._id);
+    setActionLoading(false);
+
+    if (success) {
+      closeActionConfirm();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 p-6 sm:p-10">
       <div className="max-w-7xl mx-auto">
-        {/* HEADER */}
         <div className="text-center mb-10 animate-fadeIn">
           <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
             Your Appointments
@@ -49,7 +74,6 @@ const DoctorAppointments = () => {
             Manage and track your upcoming appointments
           </p>
 
-          {/* SORT BUTTON */}
           <div className="mt-6 flex justify-center">
             <button
               onClick={() =>
@@ -62,9 +86,7 @@ const DoctorAppointments = () => {
           </div>
         </div>
 
-        {/* TABLE */}
         <div className="bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden">
-          {/* TABLE HEADER */}
           <div
             className="
               hidden sm:grid
@@ -86,7 +108,6 @@ const DoctorAppointments = () => {
             <div className="pl-20"><p>Actions</p></div>
           </div>
 
-          {/* BODY */}
           <div className="max-h-[70vh] overflow-y-auto">
             {appointments.length === 0 ? (
               <div className="text-center py-20 text-gray-500">
@@ -103,12 +124,10 @@ const DoctorAppointments = () => {
                     hover:bg-indigo-50/40 transition-all
                   "
                 >
-                  {/* Index */}
                   <p className="text-gray-400 font-semibold text-sm sm:block hidden">
                     {String(index + 1).padStart(2, "0")}
                   </p>
 
-                  {/* Patient */}
                   <div className="flex items-center gap-3">
                     <img
                       src={item.userData.image}
@@ -123,7 +142,6 @@ const DoctorAppointments = () => {
                     </div>
                   </div>
 
-                  {/* Date & Time */}
                   <div className="flex flex-col pl-6">
                     <span className="text-sm font-medium">
                       {slotDateFormat(item.slotDate)}
@@ -133,12 +151,10 @@ const DoctorAppointments = () => {
                     </span>
                   </div>
 
-                  {/* Amount */}
                   <div className="text-lg font-bold text-gray-900">
                     ${item.amount}
                   </div>
 
-                  {/* Status */}
                   <div>
                     {item.cancelled ? (
                       <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
@@ -155,34 +171,30 @@ const DoctorAppointments = () => {
                     )}
                   </div>
 
-                  {/* Actions */}
                   <div className="flex justify-end gap-2 pl-8">
                     {item.cancelled ? (
                       <span className="px-4 py-2 bg-red-100 text-red-600 rounded-lg text-sm font-semibold">
                         Cancelled
                       </span>
                     ) : item.isCompleted ? (
-                      <button
-                        onClick={() => completeAppointment(item._id)}
-                        className="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-semibold hover:bg-green-200 transition"
-                      >
+                      <span className="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-semibold">
                         Completed
-                      </button>
+                      </span>
                     ) : (
-                      <button
-                        onClick={() => completeAppointment(item._id)}
-                        className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-200 transition"
-                      >
-                        Complete
-                      </button>
-                    )}
-                    {!item.cancelled && !item.isCompleted && (
-                      <button
-                        onClick={() => cancelAppointment(item._id)}
-                        className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 hover:border-red-500 hover:bg-red-50 transition text-gray-600 hover:text-red-600 font-bold"
-                      >
-                        ✕
-                      </button>
+                      <>
+                        <button
+                          onClick={() => openActionConfirm(item, "complete")}
+                          className="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-semibold hover:bg-green-200 transition"
+                        >
+                          Complete
+                        </button>
+                        <button
+                          onClick={() => openActionConfirm(item, "cancel")}
+                          className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 hover:border-red-500 hover:bg-red-50 transition text-gray-600 hover:text-red-600 font-bold"
+                        >
+                          ✕
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -203,6 +215,63 @@ const DoctorAppointments = () => {
         }
       `}
       </style>
+
+      <PremiumConfirmModal
+        open={Boolean(pendingAction)}
+        tone={pendingAction?.action === "cancel" ? "danger" : "success"}
+        title={
+          pendingAction?.action === "cancel" ? "Confirm Cancellation" : "Confirm Completion"
+        }
+        subtitle={
+          pendingAction?.action === "cancel"
+            ? "Please confirm this appointment should be cancelled."
+            : "Mark this appointment as completed after the consultation."
+        }
+        confirmLabel={
+          pendingAction?.action === "cancel" ? "Cancel Appointment" : "Complete Appointment"
+        }
+        cancelLabel="Back"
+        loading={actionLoading}
+        onConfirm={confirmAppointmentAction}
+        onCancel={closeActionConfirm}
+        meta={
+          pendingAction?.appointment ? (
+            <div className="flex items-center gap-4">
+              <img
+                src={pendingAction.appointment.userData?.image}
+                alt={pendingAction.appointment.userData?.name || "Patient"}
+                className="h-14 w-14 rounded-2xl object-cover ring-2 ring-white shadow-md"
+              />
+              <div>
+                <p className="text-base font-bold">{pendingAction.appointment.userData?.name}</p>
+                <p className="text-sm opacity-90">{pendingAction.appointment.userData?.email}</p>
+                <p className="text-sm opacity-90">
+                  {slotDateFormat(pendingAction.appointment.slotDate)} • {formatTime(pendingAction.appointment.slotTime)}
+                </p>
+              </div>
+            </div>
+          ) : null
+        }
+      >
+        {pendingAction?.appointment && (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Amount</p>
+              <p className="mt-1 text-base font-bold text-slate-900">${pendingAction.appointment.amount}</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Status</p>
+              <p className="mt-1 text-base font-bold text-slate-900">
+                {pendingAction.appointment.cancelled
+                  ? "Cancelled"
+                  : pendingAction.appointment.isCompleted
+                  ? "Completed"
+                  : "Scheduled"}
+              </p>
+            </div>
+          </div>
+        )}
+      </PremiumConfirmModal>
     </div>
   );
 };

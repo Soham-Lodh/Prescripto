@@ -92,7 +92,7 @@ const MyAppointments = () => {
             item._id === appointmentId ? { ...item, cancelled: true } : item
           )
         );
-        getDoctorsData();
+        await getDoctorsData({ force: true });
       } else {
         toast.error(data.message);
       }
@@ -120,7 +120,7 @@ const MyAppointments = () => {
           )
         );
 
-        await getDoctorsData();
+        await getDoctorsData({ force: true });
       } else {
         toast.error(data.message);
       }

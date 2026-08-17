@@ -9,6 +9,11 @@ export const changeAvailability = async (req, res) => {
   try {
     const { docId } = req.body;
     const docData = await doctorModel.findById(docId);
+
+    if (!docData) {
+      return res.json({ success: false, message: "Doctor not found" });
+    }
+
     await doctorModel.findByIdAndUpdate(docId, {
       available: !docData.available,
     });
@@ -22,6 +27,7 @@ export const changeAvailability = async (req, res) => {
 export const doctorsList = async (req, res) => {
   try {
     const doctors = await doctorModel.find({}).select(["-password", "-email"]);
+    res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
     res.json({ success: true, doctors });
   } catch (error) {
     console.log(error);

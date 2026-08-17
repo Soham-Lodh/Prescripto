@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import doctorModel from "../models/doctorModel.js";
 
 const authDoctor = async (req, res, next) => {
   try {
@@ -10,7 +11,16 @@ const authDoctor = async (req, res, next) => {
       });
     }
     const tokenDecode = jwt.verify(dtoken, process.env.JWT_SECRET);
-    req.body.docId = tokenDecode.id;
+
+    const doctor = await doctorModel.findById(tokenDecode.id).select("_id");
+    if (!doctor) {
+      return res.json({
+        success: false,
+        message: "Not authorized",
+      });
+    }
+
+    req.body.docId = doctor._id.toString();
     next();
   } catch (err) {
     console.error("Error in doctor auth:", err);
