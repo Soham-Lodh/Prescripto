@@ -32,25 +32,21 @@ const DoctorDashboard = () => {
 
   const stats = [
     {
-      icon: "📋",
       label: "Total Appointments",
       value: dashData.appointments || 0,
       color: "from-blue-500 to-cyan-500",
     },
     {
-      icon: "👥",
       label: "Patients",
       value: dashData.patients || 0,
       color: "from-purple-500 to-pink-500",
     },
     {
-      icon: "✅",
       label: "Completed",
       value: dashData.completed || 0,
       color: "from-green-500 to-emerald-500",
     },
     {
-      icon: "❌",
       label: "Cancelled",
       value: dashData.cancelled || 0,
       color: "from-red-500 to-orange-500",
@@ -86,7 +82,6 @@ const DoctorDashboard = () => {
               <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
 
               <div className="relative p-6 space-y-4">
-                <div className="text-4xl">{stat.icon}</div>
                 <div>
                   <p className="text-gray-600 text-sm font-medium uppercase tracking-wide">
                     {stat.label}
