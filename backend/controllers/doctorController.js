@@ -1,23 +1,48 @@
 import doctorModel from "../models/doctorModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import appointmentModel from "../models/appointmentModel.js";
 import { v2 as cloudinary } from "cloudinary";
-import { checkAndCompleteAppointments, toggleAppointmentCompletion } from "../helpers/appointmentHelper.js";
+import {
+  autoCompleteAppointments,
+  cancelAppointmentWithLock,
+  toggleAppointmentCompletion,
+} from "../helpers/appointmentHelper.js";
+import { getLockTimeoutMs, lockKey, withLocks } from "../helpers/lockManager.js";
+import { readThrough } from "../helpers/cache.js";
+import {
+  KEY,
+  TAG,
+  TTL,
+  invalidateAppointmentReads,
+  invalidateDoctorReads,
+} from "../helpers/cacheKeys.js";
 
+const noStore = (res) => res.set("Cache-Control", "private, no-store");
+
+/** Admin-side availability toggle (mounted under /api/admin). */
 export const changeAvailability = async (req, res) => {
   try {
     const { docId } = req.body;
-    const docData = await doctorModel.findById(docId);
 
-    if (!docData) {
-      return res.json({ success: false, message: "Doctor not found" });
+    if (!docId || !mongoose.isValidObjectId(docId)) {
+      return res.json({ success: false, message: "Invalid doctor id" });
     }
 
-    await doctorModel.findByIdAndUpdate(docId, {
-      available: !docData.available,
+    const message = await withLocks([lockKey.doctor(docId)], async () => {
+      const docData = await doctorModel.findById(docId).lean();
+      if (!docData) return { success: false, message: "Doctor not found" };
+
+      await doctorModel.findByIdAndUpdate(docId, {
+        available: !docData.available,
+      });
+
+      invalidateDoctorReads(docId);
+      return { success: true, message: "Availability Changed Successfully" };
     });
-    res.json({ success: true, message: "Availability Changed Successfully" });
+
+    res.json(message);
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });
@@ -26,7 +51,12 @@ export const changeAvailability = async (req, res) => {
 
 export const doctorsList = async (req, res) => {
   try {
-    const doctors = await doctorModel.find({}).select(["-password", "-email"]);
+    const doctors = await readThrough(
+      KEY.doctorsList,
+      () => doctorModel.find({}).select(["-password", "-email"]).lean(),
+      { ttlMs: TTL.doctorsList, tags: [TAG.doctors] }
+    );
+
     res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
     res.json({ success: true, doctors });
   } catch (error) {
@@ -64,12 +94,18 @@ export const loginDoctor = async (req, res) => {
 export const getDoctorProfile = async (req, res) => {
   try {
     const { docId } = req.body;
-    const doctor = await doctorModel.findById(docId).select("-password");
+
+    const doctor = await readThrough(
+      KEY.doctorProfile(docId),
+      () => doctorModel.findById(docId).select("-password").lean(),
+      { ttlMs: TTL.doctorProfile, tags: [TAG.doctor(docId), TAG.doctors] }
+    );
 
     if (!doctor) {
       return res.json({ success: false, message: "Doctor not found" });
     }
 
+    noStore(res);
     res.json({ success: true, doctor });
   } catch (error) {
     console.log(error);
@@ -111,10 +147,15 @@ export const updateDoctorProfile = async (req, res) => {
       updateData.image = result.secure_url;
     }
 
-    const updatedDoctor = await doctorModel.findByIdAndUpdate(docId, updateData, {
-      new: true,
-    }).select("-password");
+    const updatedDoctor = await doctorModel
+      .findByIdAndUpdate(docId, updateData, { new: true })
+      .select("-password")
+      .lean();
 
+    // The roster and this doctor's cached profile both embed these fields.
+    invalidateDoctorReads(docId);
+
+    noStore(res);
     res.json({ success: true, message: "Profile updated successfully", doctor: updatedDoctor });
   } catch (error) {
     console.log(error);
@@ -125,17 +166,21 @@ export const updateDoctorProfile = async (req, res) => {
 export const doctorChangeAvailability = async (req, res) => {
   try {
     const { docId } = req.body;
-    const docData = await doctorModel.findById(docId);
 
-    if (!docData) {
-      return res.json({ success: false, message: "Doctor not found" });
-    }
+    const message = await withLocks([lockKey.doctor(docId)], async () => {
+      const docData = await doctorModel.findById(docId).lean();
+      if (!docData) return { success: false, message: "Doctor not found" };
 
-    await doctorModel.findByIdAndUpdate(docId, {
-      available: !docData.available,
+      await doctorModel.findByIdAndUpdate(docId, {
+        available: !docData.available,
+      });
+
+      invalidateDoctorReads(docId);
+      return { success: true, message: "Availability changed successfully" };
     });
 
-    res.json({ success: true, message: "Availability changed successfully" });
+    noStore(res);
+    res.json(message);
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });
@@ -145,11 +190,20 @@ export const doctorChangeAvailability = async (req, res) => {
 export const getDoctorAppointments = async (req, res) => {
   try {
     const { docId } = req.body;
-    let appointments = await appointmentModel.find({ docId });
 
-    // Auto-complete appointments whose time has passed
-    appointments = await checkAndCompleteAppointments(appointments);
+    const appointments = await readThrough(
+      KEY.doctorAppointments(docId),
+      async () => {
+        const list = await appointmentModel.find({ docId }).lean();
+        return (await autoCompleteAppointments(list)).appointments;
+      },
+      {
+        ttlMs: TTL.appointments,
+        tags: [TAG.doctorAppointments(docId), TAG.appointments],
+      }
+    );
 
+    noStore(res);
     res.json({ success: true, appointments });
   } catch (error) {
     console.log(error);
@@ -161,7 +215,11 @@ export const doctorCancelAppointment = async (req, res) => {
   try {
     const { appointmentId } = req.body;
 
-    const appointmentData = await appointmentModel.findById(appointmentId);
+    if (!appointmentId || !mongoose.isValidObjectId(appointmentId)) {
+      return res.status(400).json({ success: false, message: "Invalid appointment id" });
+    }
+
+    const appointmentData = await appointmentModel.findById(appointmentId).lean();
     if (!appointmentData) {
       return res.status(404).json({
         success: false,
@@ -169,32 +227,37 @@ export const doctorCancelAppointment = async (req, res) => {
       });
     }
 
-    if (appointmentData.cancelled) {
-      return res.status(400).json({
-        success: false,
-        message: "Appointment is already cancelled",
-      });
-    }
-
-    await appointmentModel.findByIdAndUpdate(appointmentId, {
-      cancelled: true,
-      payment: false,
+    // Locked + idempotent: the slot is released exactly once, even if the doctor
+    // double-clicks or an admin cancels at the same moment.
+    const result = await cancelAppointmentWithLock({
+      appointmentId,
+      timeoutMs: getLockTimeoutMs(),
     });
 
-    const { docId, slotDate, slotTime } = appointmentData;
-    const docData = await doctorModel.findById(docId);
-    let slots_booked = docData.slots_booked;
-    slots_booked[slotDate] = slots_booked[slotDate].filter(
-      (time) => time !== slotTime
-    );
-    await doctorModel.findByIdAndUpdate(docId, { slots_booked });
+    if (!result.appointment) {
+      return res.status(404).json({ success: false, message: "Appointment not found" });
+    }
 
+    noStore(res);
     return res.status(200).json({
       success: true,
-      message: "Appointment cancelled successfully",
+      message: result.changed
+        ? "Appointment cancelled successfully"
+        : "Appointment was already cancelled",
+      alreadyCancelled: result.alreadyCancelled,
     });
   } catch (error) {
     console.error("Cancel appointment error:", error);
+
+    if (error?.code === "LOCK_TIMEOUT") {
+      res.set("Retry-After", "1");
+      return res.status(503).json({
+        success: false,
+        code: "LOCK_TIMEOUT",
+        message: "This appointment is being updated by another request. Please retry.",
+      });
+    }
+
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -206,14 +269,18 @@ export const doctorCompleteAppointment = async (req, res) => {
   try {
     const { appointmentId } = req.body;
 
-    if (!appointmentId) {
+    if (!appointmentId || !mongoose.isValidObjectId(appointmentId)) {
       return res.status(400).json({
         success: false,
         message: "Appointment ID is required",
       });
     }
 
+    // The helper invalidates every appointment-derived cache entry.
     const updated = await toggleAppointmentCompletion(appointmentId);
+
+    invalidateAppointmentReads({ userId: updated.userId, docId: updated.docId });
+    noStore(res);
 
     return res.status(200).json({
       success: true,
@@ -222,7 +289,7 @@ export const doctorCompleteAppointment = async (req, res) => {
     });
   } catch (error) {
     console.error("Complete appointment error:", error);
-    
+
     if (error.message === "Appointment not found") {
       return res.status(404).json({
         success: false,
@@ -247,19 +314,28 @@ export const doctorCompleteAppointment = async (req, res) => {
 export const doctorDashboard = async (req, res) => {
   try {
     const { docId } = req.body;
-    let appointments = await appointmentModel.find({ docId });
 
-    // Auto-complete appointments whose time has passed
-    appointments = await checkAndCompleteAppointments(appointments);
+    const dashData = await readThrough(
+      KEY.doctorDashboard(docId),
+      async () => {
+        const appointments = await appointmentModel.find({ docId }).lean();
+        const settled = (await autoCompleteAppointments(appointments)).appointments;
 
-    const dashData = {
-      appointments: appointments.length,
-      patients: new Set(appointments.map((apt) => apt.userId)).size,
-      cancelled: appointments.filter((apt) => apt.cancelled).length,
-      completed: appointments.filter((apt) => apt.isCompleted).length,
-      latestAppointments: appointments.reverse().slice(0, 5),
-    };
+        return {
+          appointments: settled.length,
+          patients: new Set(settled.map((apt) => apt.userId)).size,
+          cancelled: settled.filter((apt) => apt.cancelled).length,
+          completed: settled.filter((apt) => apt.isCompleted).length,
+          latestAppointments: [...settled].reverse().slice(0, 5),
+        };
+      },
+      {
+        ttlMs: TTL.dashboard,
+        tags: [TAG.doctorDashboard(docId), TAG.appointments],
+      }
+    );
 
+    noStore(res);
     res.json({ success: true, dashData });
   } catch (error) {
     console.log(error);

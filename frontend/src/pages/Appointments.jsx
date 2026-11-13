@@ -1,9 +1,10 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useRef, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet-async";
 import axios from "axios";
 import { AppContext } from "../context/AppContext";
+import { invalidateCache } from "../utils/requestCache";
 import { assets } from "../assets/assets_frontend/assets";
 import RelatedDoctors from "../components/RelatedDoctors";
 import PremiumConfirmModal from "../components/PremiumConfirmModal";
@@ -12,6 +13,9 @@ const Appointments = () => {
   const navigate = useNavigate();
   const { docId } = useParams();
   const { doctors, currency, backendURL, token, getDoctorsData } = useContext(AppContext);
+  // One key per booking attempt: retries reuse it, so the server can replay the
+  // original result instead of creating a second appointment.
+  const bookingKeyRef = useRef(null);
   const [docInfo, setDocInfo] = useState(null);
   const [docSlots, setDocSlots] = useState([]);
   const [slotIndex, setSlotIndex] = useState(0);
@@ -84,6 +88,13 @@ const Appointments = () => {
     setSlotIndex(firstAvailableDay >= 0 ? firstAvailableDay : 0);
   };
 
+  const createBookingKey = () => {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+    return `booking-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  };
+
   const openBookingConfirm = () => {
     if (!token) {
       toast.warn("Please login to book an appointment");
@@ -106,6 +117,8 @@ const Appointments = () => {
     const year = date.getFullYear();
     const slotDate = `${day}-${month}-${year}`;
 
+    bookingKeyRef.current = createBookingKey();
+
     setBookingPreview({
       slotDate,
       slotTime: selectedTime,
@@ -120,27 +133,64 @@ const Appointments = () => {
   const confirmBooking = async () => {
     if (!bookingPreview) return;
 
-    try {
-      setLoading(true);
-      const { data } = await axios.post(
+    const idempotencyKey =
+      bookingKeyRef.current || (bookingKeyRef.current = createBookingKey());
+
+    const sendBooking = () =>
+      axios.post(
         `${backendURL}/api/user/book-appointment`,
         {
           docId,
           slotDate: bookingPreview.slotDate,
           slotTime: bookingPreview.slotTime,
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Idempotency-Key": idempotencyKey,
+          },
+        }
       );
+
+    try {
+      setLoading(true);
+
+      let response;
+      try {
+        response = await sendBooking();
+      } catch (error) {
+        const payload = error.response?.data;
+        // The identical request is still running server-side: wait once and retry
+        // with the same key, which replays the stored result instead of booking twice.
+        if (error.response?.status === 409 && payload?.code === "BOOKING_IN_PROGRESS") {
+          await new Promise((resolve) =>
+            setTimeout(resolve, Math.min(2000, payload.retryAfterMs ?? 600))
+          );
+          response = await sendBooking();
+        } else {
+          throw error;
+        }
+      }
+
+      const data = response.data;
 
       if (data.success) {
         toast.success(data.message);
         setBookingPreview(null);
+        bookingKeyRef.current = null;
+        // The booked slot and the appointment list both changed.
+        invalidateCache("user:");
         await getDoctorsData({ force: true });
         navigate("/my-appointments");
       } else {
         toast.error(data.message);
       }
     } catch (error) {
+      if (error.response?.data?.code === "SLOT_UNAVAILABLE") {
+        // Another patient won the slot: relist so this view is no longer stale.
+        await getDoctorsData({ force: true });
+        setSelectedTime(null);
+      }
       if (error.response && error.response.data?.message) {
         toast.error(error.response.data.message);
       } else {

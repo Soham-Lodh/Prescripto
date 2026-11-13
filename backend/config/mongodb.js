@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { ensureIndexes } from "./indexes.js";
 
 const connectDB = async () => {
   try {
@@ -11,6 +12,9 @@ const connectDB = async () => {
     });
 
     await mongoose.connect(`${process.env.MONGO_URI}/prescripto`);
+
+    // Integrity indexes (unique active slot, idempotency TTL). Best effort.
+    await ensureIndexes();
   } catch (error) {
     console.error("❌ Could not connect to MongoDB:", error.message);
     process.exit(1);

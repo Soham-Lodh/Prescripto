@@ -8,6 +8,8 @@ import doctorRouter from "./routes/doctorRoutes.js";
 import userRouter from "./routes/userRoute.js";
 import { rateLimit } from "express-rate-limit";
 import doctorModel from "./models/doctorModel.js";
+import { cacheStats } from "./helpers/cache.js";
+import { getLockStats } from "./helpers/lockManager.js";
 
 dotenv.config();
 
@@ -37,6 +39,15 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: true }));
+
+/**
+ * Per-user payloads must never be cached by a browser, proxy or CDN. Public
+ * endpoints set their own Cache-Control afterwards, which overrides this.
+ */
+app.use("/api", (req, res, next) => {
+  res.set("Cache-Control", "private, no-store");
+  next();
+});
 
 app.use("/api/admin", adminRouter);
 app.use("/api/doctor", doctorRouter);
@@ -86,6 +97,16 @@ app.get("/sitemap.xml", async (req, res) => {
     console.error("Sitemap error:", error);
     res.status(500).end();
   }
+});
+
+// Operational visibility for the cache and lock layers.
+app.get("/health", (req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.json({
+    success: true,
+    cache: cacheStats(),
+    locks: getLockStats(),
+  });
 });
 
 app.get("/", (req, res) => {

@@ -1,11 +1,24 @@
 import validator from "validator";
 import bcrypt from "bcrypt";
+import mongoose from "mongoose";
 import { v2 as cloudinary } from "cloudinary";
 import doctorModel from "../models/doctorModel.js";
 import jwt from "jsonwebtoken";
 import appointmentModel from "../models/appointmentModel.js";
 import contactModel from "../models/contactModel.js";
 import userModel from "../models/userModel.js";
+import { cancelAppointmentWithLock } from "../helpers/appointmentHelper.js";
+import { getLockTimeoutMs } from "../helpers/lockManager.js";
+import { readThrough } from "../helpers/cache.js";
+import {
+  KEY,
+  TAG,
+  TTL,
+  invalidateAppointmentReads,
+  invalidateDoctorReads,
+} from "../helpers/cacheKeys.js";
+
+const noStore = (res) => res.set("Cache-Control", "private, no-store");
 
 export const addDoctor = async (req, res) => {
   try {
@@ -81,6 +94,9 @@ export const addDoctor = async (req, res) => {
 
     const newDoctor = new doctorModel(doctorData);
     await newDoctor.save();
+
+    // New doctor means the cached roster is outdated.
+    invalidateDoctorReads(newDoctor._id);
 
     res.json({ success: true, message: "Doctor added" });
   } catch (err) {
@@ -164,7 +180,13 @@ export const loginAdmin = async (req, res) => {
 
 export const allDoctors = async (req, res) => {
   try {
-    const doctors = await doctorModel.find({}).select("-password");
+    const doctors = await readThrough(
+      KEY.adminDoctorsList,
+      () => doctorModel.find({}).select("-password").lean(),
+      { ttlMs: TTL.doctorsList, tags: [TAG.doctors] }
+    );
+
+    noStore(res);
     return res.json({ success: true, doctors });
   } catch (err) {
     console.error(err);
@@ -197,6 +219,13 @@ export const updateDoctor = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Doctor id is required",
+      });
+    }
+
+    if (!mongoose.isValidObjectId(docId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid doctor id",
       });
     }
 
@@ -273,8 +302,12 @@ export const updateDoctor = async (req, res) => {
 
     const updatedDoctor = await doctorModel
       .findByIdAndUpdate(docId, updateData, { new: true })
-      .select("-password");
+      .select("-password")
+      .lean();
 
+    invalidateDoctorReads(docId);
+
+    noStore(res);
     return res.json({
       success: true,
       message: "Doctor details updated successfully",
@@ -309,6 +342,13 @@ export const deleteDoctor = async (req, res) => {
       });
     }
 
+    if (!mongoose.isValidObjectId(docId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid doctor id",
+      });
+    }
+
     const doctor = await doctorModel.findById(docId);
     if (!doctor) {
       return res.status(404).json({
@@ -322,6 +362,10 @@ export const deleteDoctor = async (req, res) => {
     });
 
     await doctorModel.findByIdAndDelete(docId);
+
+    // Both the roster and every appointment view that embedded this doctor.
+    invalidateDoctorReads(docId);
+    invalidateAppointmentReads({ docId });
 
     return res.json({
       success: true,
@@ -339,7 +383,13 @@ export const deleteDoctor = async (req, res) => {
 
 export const appointmentsAdmin = async (req, res) => {
   try {
-    const appointments = await appointmentModel.find({});
+    const appointments = await readThrough(
+      KEY.adminAppointments,
+      () => appointmentModel.find({}).lean(),
+      { ttlMs: TTL.appointments, tags: [TAG.appointments] }
+    );
+
+    noStore(res);
     res.json({ success: true, appointments });
   } catch (err) {
     console.error(err);
@@ -355,7 +405,14 @@ export const adminCancelAppointment = async (req, res) => {
   try {
     const { appointmentId } = req.body;
 
-    const appointmentData = await appointmentModel.findById(appointmentId);
+    if (!appointmentId || !mongoose.isValidObjectId(appointmentId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid appointment id",
+      });
+    }
+
+    const appointmentData = await appointmentModel.findById(appointmentId).lean();
     if (!appointmentData) {
       return res.status(404).json({
         success: false,
@@ -363,29 +420,39 @@ export const adminCancelAppointment = async (req, res) => {
       });
     }
 
-    if (appointmentData.cancelled) {
-      return res.status(400).json({
+    // Same locked, idempotent cancel path as the patient and doctor endpoints.
+    const result = await cancelAppointmentWithLock({
+      appointmentId,
+      timeoutMs: getLockTimeoutMs(),
+    });
+
+    if (!result.appointment) {
+      return res.status(404).json({
         success: false,
-        message: "Appointment is already cancelled",
+        message: "Appointment not found",
       });
     }
-    await appointmentModel.findByIdAndUpdate(appointmentId, {
-      cancelled: true,
-      payment: false,
-    });
-    const { docId, slotDate, slotTime } = appointmentData;
-    const docData = await doctorModel.findById(docId);
-    let slots_booked = docData.slots_booked;
-    slots_booked[slotDate] = slots_booked[slotDate].filter(
-      (time) => time !== slotTime
-    );
-    await doctorModel.findByIdAndUpdate(docId, { slots_booked });
+
+    noStore(res);
     return res.status(200).json({
       success: true,
-      message: "Appointment cancelled successfully",
+      message: result.changed
+        ? "Appointment cancelled successfully"
+        : "Appointment was already cancelled",
+      alreadyCancelled: result.alreadyCancelled,
     });
   } catch (error) {
     console.error("Cancel appointment error:", error);
+
+    if (error?.code === "LOCK_TIMEOUT") {
+      res.set("Retry-After", "1");
+      return res.status(503).json({
+        success: false,
+        code: "LOCK_TIMEOUT",
+        message: "This appointment is being updated by another request. Please retry.",
+      });
+    }
+
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -395,7 +462,13 @@ export const adminCancelAppointment = async (req, res) => {
 
 export const messages = async (req, res) => {
   try {
-    const messages = await contactModel.find({});
+    const messages = await readThrough(
+      KEY.messages,
+      () => contactModel.find({}).lean(),
+      { ttlMs: TTL.messages, tags: [TAG.messages] }
+    );
+
+    noStore(res);
     return res.json({ success: true, messages });
   } catch (err) {
     console.error(err);
@@ -408,17 +481,28 @@ export const messages = async (req, res) => {
 
 export const adminDashboard = async (req, res) => {
   try {
-    const doctors = await doctorModel.find({});
-    const users = await userModel.find({});
-    const appointments = await appointmentModel.find({});
+    const dashData = await readThrough(
+      KEY.adminDashboard,
+      async () => {
+        const [doctorCount, patientCount, appointmentCount, latestAppointments] =
+          await Promise.all([
+            doctorModel.countDocuments({}),
+            userModel.countDocuments({}),
+            appointmentModel.countDocuments({}),
+            appointmentModel.find({}).sort({ date: -1 }).limit(5).lean(),
+          ]);
 
-    const dashData = {
-      doctors: doctors.length,
-      appointments: appointments.length,
-      patients: users.length,
-      latestAppointments: appointments.reverse().slice(0, 5),
-    };
+        return {
+          doctors: doctorCount,
+          appointments: appointmentCount,
+          patients: patientCount,
+          latestAppointments,
+        };
+      },
+      { ttlMs: TTL.dashboard, tags: [TAG.adminDashboard, TAG.appointments] }
+    );
 
+    noStore(res);
     res.json({ success: true, dashData });
   } catch (error) {
     console.log(error);
